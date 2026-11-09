@@ -462,13 +462,27 @@ function parseWorkbook(buf){
           cMock=col(/mock/), cDate=col(/exam\s*date|cert.*date/), cCert=col(/^certification( completed)?$|^certified$/);
     const cWeek = Array.from({length:8},(_,i)=>col(new RegExp('^w(ee)?k\\s*'+(i+1)+'$')));
     let n = 0;
+    // Identity cells (Sl No / Name / Email / Role) sit before Week 1. Rows are sometimes typed
+    // one column off, so locate the email by its "@" and take name / role from its neighbours.
+    const idEnd = Math.max(cWeek[0] >= 0 ? cWeek[0] : 4, 1);
+    const txt = v => String(v ?? '').trim();
     rows.slice(hi+1).forEach(r=>{
-      const name = tidyName(r[cName] ?? '');
+      let name = '', email = '', role = '';
+      const ei = Array.from({length:idEnd},(_,i)=>i).find(i=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(txt(r[i])));
+      if (ei !== undefined){
+        email = txt(r[ei]).toLowerCase();
+        for (let i = ei-1; i >= 0; i--){ const v = txt(r[i]); if (v && !/^\d+$/.test(v)){ name = v; break; } }
+        role = txt(r[ei+1]) && ei+1 < idEnd ? txt(r[ei+1]) : txt(cRole>=0 ? r[cRole] : '');
+        if (role.includes('@')) role = '';
+      } else {
+        name = txt(r[cName]); email = txt(cEmail>=0 ? r[cEmail] : '').toLowerCase(); role = txt(cRole>=0 ? r[cRole] : '');
+      }
+      name = tidyName(name);
       if (!name) return;
-      const email = String(cEmail>=0 ? r[cEmail] : '').trim().toLowerCase();
       const key = email || name.toLowerCase();
       let p = byEmail.get(key);
-      if (!p){ p = {name, email, role:String(cRole>=0?r[cRole]:'').trim(), certs:[], weeks:{}, mockScore:{}, certified:{}, certDate:{}}; byEmail.set(key,p); }
+      if (!p){ p = {name, email, role, certs:[], weeks:{}, mockScore:{}, certified:{}, certDate:{}}; byEmail.set(key,p); }
+      if (!p.role && role) p.role = role;
       if (p.certs.includes(cert)) return;
       p.certs.push(cert);
       p.weeks[cert] = cWeek.map(ci=>ci>=0 ? toPct(r[ci]) : 0);
