@@ -1,12 +1,840 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello World</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>HCL Learning Excellence Tracker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky header + tab bar, single centered 1200px column; summary (KPIs, cert cards, timeline) before detail tables. */
+:root{
+  color-scheme:dark;
+  --bg:#080D18; --surface:#0E1626; --surface-2:#131E33; --line:#1D2A43; --line-strong:#2A3B5C;
+  --fg:#E6EDF8; --fg-2:#A9B8D2; --muted:#6A87AD;
+  --accent:#3D9EFF; --accent-soft:rgba(61,158,255,.14);
+  --c-agentic:#3D9EFF; --c-testcloud:#A78BFA; --c-ba:#FB923C; --c-sa:#34D399;
+  --ink-agentic:#6CB6FF; --ink-testcloud:#C0ABFC; --ink-ba:#FDAE6B; --ink-sa:#5EE0AE;
+  --s-ontrack:#22C55E; --s-progress:#3D9EFF; --s-behind:#F59E0B; --s-none:#6A87AD; --s-cert:#FBBF24;
+  --s-ontrack-ink:#4ADE80; --s-progress-ink:#6CB6FF; --s-behind-ink:#FBBF24; --s-none-ink:#8FA6C6; --s-cert-ink:#FCD34D;
+  --on-color:#07101F;
+  --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 8px 24px rgba(0,0,0,.25);
+  --font-ui:"Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --r-card:10px; --r-ctl:6px;
+}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]){
+  color-scheme:light;
+  --bg:#F3F6FB; --surface:#FFFFFF; --surface-2:#F6F8FC; --line:#DFE6F1; --line-strong:#C7D3E6;
+  --fg:#0B1424; --fg-2:#3C4E6E; --muted:#5D7598;
+  --accent:#1F7FE6; --accent-soft:rgba(31,127,230,.10);
+  --ink-agentic:#1668C4; --ink-testcloud:#6D4ED8; --ink-ba:#C2560C; --ink-sa:#0F8A5F;
+  --s-ontrack-ink:#15803D; --s-progress-ink:#1668C4; --s-behind-ink:#B45309; --s-none-ink:#5D7598; --s-cert-ink:#A16207;
+  --shadow:0 1px 2px rgba(15,30,60,.06), 0 6px 18px rgba(15,30,60,.05);
+}}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F3F6FB; --surface:#FFFFFF; --surface-2:#F6F8FC; --line:#DFE6F1; --line-strong:#C7D3E6;
+  --fg:#0B1424; --fg-2:#3C4E6E; --muted:#5D7598;
+  --accent:#1F7FE6; --accent-soft:rgba(31,127,230,.10);
+  --ink-agentic:#1668C4; --ink-testcloud:#6D4ED8; --ink-ba:#C2560C; --ink-sa:#0F8A5F;
+  --s-ontrack-ink:#15803D; --s-progress-ink:#1668C4; --s-behind-ink:#B45309; --s-none-ink:#5D7598; --s-cert-ink:#A16207;
+  --shadow:0 1px 2px rgba(15,30,60,.06), 0 6px 18px rgba(15,30,60,.05);
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.num,.mono{font-family:var(--font-data);font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 260px}
+.mark{width:34px;height:34px;border-radius:8px;display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:6px;background:var(--surface);border:1px solid var(--line);flex:none}
+.mark i{border-radius:2px}
+.brand h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-.01em;line-height:1.2}
+.brand p{margin:0;color:var(--muted);font-size:12px}
+.actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.wk-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--r-ctl);background:var(--accent-soft);color:var(--fg);font-size:12px;font-weight:600;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+.wk-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);background:var(--surface);cursor:pointer;font-size:13px;font-weight:600;transition:background .15s,border-color .15s}
+.btn:hover{border-color:var(--accent);background:var(--surface-2)}
+.btn.icon{padding:7px 9px}
+.btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:10px 14px;border:0;background:none;cursor:pointer;color:var(--muted);font-weight:600;font-size:13px;border-bottom:2px solid transparent;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.tab:hover{color:var(--fg)}
+.tab .count{font-family:var(--font-data);font-size:11px;color:var(--muted);margin-left:6px}
+
+main .wrap{padding-block:24px 48px;display:grid;gap:28px}
+.section-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.section-h h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.005em}
+.section-h .sub{color:var(--muted);font-size:12px}
+.eyebrow{text-transform:uppercase;letter-spacing:.08em;font-size:11px;font-weight:700;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:var(--shadow)}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi{padding:16px;display:grid;gap:6px;min-width:0}
+.kpi .v{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.kpi .v small{font-size:15px;color:var(--muted);font-weight:500}
+.kpi .s{color:var(--fg-2);font-size:12px}
+.kpi.gold .v{color:var(--s-cert-ink)}
+
+/* Cert cards */
+.certs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cert{padding:16px;display:grid;gap:14px;position:relative;overflow:hidden;min-width:0}
+.cert::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--cc)}
+.cert-h{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.cert-h h3{margin:0;font-size:14px;font-weight:700;line-height:1.3;text-wrap:balance}
+.track-tag{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 6px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);color:var(--fg-2);white-space:nowrap}
+.cert-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cert-stats div{display:grid;gap:2px}
+.cert-stats b{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:20px;font-weight:600}
+.cert-stats span{font-size:11px;color:var(--muted)}
+.bar{height:8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--cc,var(--accent));min-width:0}
+.bar-row{display:flex;justify-content:space-between;font-size:12px;color:var(--fg-2);margin-bottom:6px}
+.bar-row b{font-family:var(--font-data);font-variant-numeric:tabular-nums;color:var(--fg)}
+.stack{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--surface-2);gap:1px}
+.stack i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11px;color:var(--fg-2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{font-family:var(--font-data);font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
+.sw{width:8px;height:8px;border-radius:2px;display:inline-block}
+.this-week{font-size:12px;color:var(--fg-2);border-top:1px dashed var(--line);padding-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* Timeline */
+.timeline{padding:18px 16px 16px;overflow-x:auto}
+.tl{display:grid;grid-template-columns:repeat(8,minmax(92px,1fr));gap:6px;min-width:780px}
+.tl-w{display:grid;gap:8px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);position:relative}
+.tl-w .wn{font-family:var(--font-data);font-size:12px;font-weight:600;color:var(--muted)}
+.tl-w .wd{font-size:11px;color:var(--muted)}
+.tl-w .wt{font-size:12px;font-weight:600;line-height:1.3}
+.tl-w .ticks{display:flex;gap:3px}
+.tl-w .ticks i{flex:1;height:4px;border-radius:2px;background:var(--line-strong)}
+.tl-w.past{opacity:.75}
+.tl-w.past .wn{color:var(--fg-2)}
+.tl-w.now{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent) inset}
+.tl-w.now .wn{color:var(--accent)}
+.now-flag{position:absolute;top:-9px;right:8px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--on-color);padding:1px 6px;border-radius:4px}
+.tl-foot{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-size:12px;color:var(--fg-2)}
+.tl-foot b{font-family:var(--font-data);font-variant-numeric:tabular-nums;color:var(--fg)}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:var(--r-ctl);font-size:11px;font-weight:600;border:1px solid var(--line);background:var(--surface-2);white-space:nowrap;color:var(--fg-2)}
+.chip .d{width:7px;height:7px;border-radius:50%;background:var(--cc)}
+.status{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:var(--r-ctl);font-size:12px;font-weight:600;white-space:nowrap;color:var(--sc-ink);background:color-mix(in srgb,var(--sc) 14%,transparent);border:1px solid color-mix(in srgb,var(--sc) 35%,transparent)}
+.status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sc)}
+.st-ontrack{--sc:var(--s-ontrack);--sc-ink:var(--s-ontrack-ink)}
+.st-progress{--sc:var(--s-progress);--sc-ink:var(--s-progress-ink)}
+.st-behind{--sc:var(--s-behind);--sc-ink:var(--s-behind-ink)}
+.st-none{--sc:var(--s-none);--sc-ink:var(--s-none-ink)}
+.st-cert{--sc:var(--s-cert);--sc-ink:var(--s-cert-ink)}
+
+/* Schedule */
+.weeks{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.wk{padding:14px;display:grid;gap:10px;align-content:start}
+.wk.now{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,var(--shadow)}
+.wk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.wk-h b{font-size:14px}
+.wk-h .mono{font-size:12px;color:var(--muted)}
+.wk-theme{font-size:12px;color:var(--fg-2);margin-top:-4px}
+.act{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;font-size:12px;padding-top:8px;border-top:1px solid var(--line)}
+.act .who{display:flex;align-items:center;gap:6px;font-weight:600;min-width:0}
+.act .who .d{width:8px;height:8px;border-radius:50%;background:var(--cc);flex:none}
+.act .what{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0;color:var(--fg-2)}
+.atype{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 6px;border-radius:4px;border:1px solid var(--ac);color:var(--fg);background:color-mix(in srgb,var(--ac) 16%,transparent)}
+.a-self{--ac:#5B7BA6}.a-ilt{--ac:#3D9EFF}.a-tutor{--ac:#A78BFA}.a-mock{--ac:#F59E0B}.a-exam{--ac:#FBBF24}.a-track{--ac:#2E8B7A}
+.type-key{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Participants */
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.field{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-ctl);padding:0 10px;height:36px;min-width:0}
+.field svg{width:15px;height:15px;stroke:var(--muted);fill:none;stroke-width:2;flex:none}
+.field input{border:0;background:none;outline:none;height:100%;min-width:0;width:220px;max-width:100%}
+.field.search{flex:1 1 220px}
+.field.search input{width:100%}
+select.sel{height:36px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);background:var(--surface);padding:0 10px;cursor:pointer}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--r-ctl);overflow:hidden;background:var(--surface);flex-wrap:wrap}
+.seg button{border:0;background:none;padding:0 10px;height:34px;cursor:pointer;font-size:12px;font-weight:600;color:var(--fg-2);display:inline-flex;align-items:center;gap:6px}
+.seg button .d{width:7px;height:7px;border-radius:50%;background:var(--cc)}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--fg);box-shadow:inset 0 -2px 0 var(--cc,var(--accent))}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;background:var(--surface-2);position:sticky;top:0}
+th button{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+th button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+th .arr{font-size:10px;opacity:.4}
+th[aria-sort] .arr{opacity:1;color:var(--accent)}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:0}
+.person{display:flex;align-items:center;gap:10px;min-width:0}
+.av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--on-color);background:var(--a1);flex:none;letter-spacing:.02em}
+.av.multi{background:linear-gradient(135deg,var(--a1) 0 50%,var(--a2) 50% 100%)}
+.person .nm{font-weight:600;line-height:1.25}
+.person .em{font-size:12px;color:var(--muted);font-family:var(--font-data);word-break:break-all}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.pcell{display:flex;align-items:center;gap:10px;min-width:150px}
+.pcell .bar{flex:1;height:6px}
+.pcell b{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-weight:500;font-size:12.5px;width:40px;text-align:right}
+.tfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.empty-row td{text-align:center;color:var(--muted);padding:28px}
+
+/* Completions */
+.empty{padding:28px;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.medal{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--s-cert);color:var(--s-cert-ink)}
+.medal svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8}
+.empty h3{margin:0 0 4px;font-size:16px}
+.empty p{margin:0;color:var(--fg-2);max-width:62ch}
+.countdown{display:flex;gap:16px;margin-top:12px;flex-wrap:wrap}
+.countdown div{display:grid}
+.countdown b{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:22px;font-weight:600}
+.countdown span{font-size:11px;color:var(--muted)}
+.boards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.board{padding:14px 16px;min-width:0}
+.board h3{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+.board h3 .d{width:9px;height:9px;border-radius:50%;background:var(--cc)}
+.board ol{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.board li{display:grid;grid-template-columns:22px minmax(0,1fr) 120px;gap:10px;align-items:center;font-size:13px}
+.board li .rk{font-family:var(--font-data);color:var(--muted);font-size:12px}
+.board li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.board .none{color:var(--muted);font-size:12.5px;margin-top:10px;padding:12px;border:1px dashed var(--line-strong);border-radius:8px}
+.wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.badge-card{padding:14px;display:flex;gap:12px;align-items:center;border-color:color-mix(in srgb,var(--s-cert) 40%,var(--line))}
+.badge-card .seal{width:40px;height:40px;border-radius:50%;background:var(--cc);display:grid;place-items:center;color:var(--on-color);flex:none;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--s-cert)}
+.badge-card .seal svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2}
+.badge-card .nm{font-weight:700}
+.badge-card .meta{font-size:12px;color:var(--fg-2)}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;z-index:40;max-width:calc(100% - 32px)}
+.note{font-size:12px;color:var(--muted)}
+
+@media (max-width:980px){.kpis,.certs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){.boards{grid-template-columns:1fr}}
+@media (max-width:520px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .kpi{padding:12px}.kpi .v{font-size:24px}
+  .certs{grid-template-columns:1fr}
+  .empty{grid-template-columns:1fr}
+  .act{grid-template-columns:1fr}
+  .brand h1{font-size:15px}
+  .btn .lbl{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
 </head>
 <body>
-    <h1>Hello World!</h1>
-    <p>Welcome to your first web page.</p>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><i style="background:var(--c-agentic)"></i><i style="background:var(--c-testcloud)"></i><i style="background:var(--c-ba)"></i><i style="background:var(--c-sa)"></i></div>
+      <div style="min-width:0">
+        <h1>Learning Excellence Certification Program</h1>
+        <p>HCL Technologies · Nov 2 – Dec 26, 2026</p>
+      </div>
+    </div>
+    <div class="actions">
+      <span class="wk-badge" id="wkBadge"><span class="dot"></span><span id="wkBadgeTxt">Week 1 of 8</span></span>
+      <button class="btn" id="exportBtn" type="button" title="Download participant progress as an Excel workbook">
+        <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span class="lbl">Export Excel</span>
+      </button>
+      <button class="btn icon" id="themeBtn" type="button" aria-label="Toggle light and dark theme">
+        <svg viewBox="0 0 24 24" id="themeIco"></svg>
+      </button>
+    </div>
+  </div>
+  <div class="wrap">
+    <nav class="tabs" role="tablist" aria-label="Dashboard sections">
+      <button class="tab" role="tab" id="tab-overview" data-tab="overview" aria-selected="true">Overview</button>
+      <button class="tab" role="tab" id="tab-schedule" data-tab="schedule" aria-selected="false">Weekly Schedule</button>
+      <button class="tab" role="tab" id="tab-participants" data-tab="participants" aria-selected="false">Participants<span class="count" id="cntP"></span></button>
+      <button class="tab" role="tab" id="tab-completions" data-tab="completions" aria-selected="false">Completions<span class="count" id="cntC"></span></button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- OVERVIEW -->
+  <section class="wrap" id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+    <div class="kpis" id="kpis"></div>
+    <div>
+      <div class="section-h"><h2>Certification tracks</h2><span class="sub" id="certsSub"></span></div>
+      <div class="certs" id="certCards"></div>
+    </div>
+    <div>
+      <div class="section-h"><h2>8-week program timeline</h2><span class="sub">Mock test ≥ 85% due Dec 18 · Exam due Dec 26</span></div>
+      <div class="card timeline"><div class="tl" id="timeline"></div><div class="tl-foot" id="tlFoot"></div></div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="wrap" id="view-schedule" role="tabpanel" aria-labelledby="tab-schedule" hidden>
+    <div>
+      <div class="section-h"><h2>Week-by-week activities</h2><div class="type-key" id="typeKey"></div></div>
+      <div class="weeks" id="weekCards"></div>
+    </div>
+  </section>
+
+  <!-- PARTICIPANTS -->
+  <section class="wrap" id="view-participants" role="tabpanel" aria-labelledby="tab-participants" hidden>
+    <div>
+      <div class="toolbar">
+        <label class="field search" for="q"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search by name or email" autocomplete="off"></label>
+        <div class="seg" id="certFilter" role="group" aria-label="Filter by certification"></div>
+        <label class="note" for="weekSel">Progress for</label>
+        <select class="sel" id="weekSel" aria-label="Week shown in progress column"></select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr id="thead"></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div class="tfoot"><span id="tCount"></span><span id="tNote"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPLETIONS -->
+  <section class="wrap" id="view-completions" role="tabpanel" aria-labelledby="tab-completions" hidden>
+    <div id="complTop"></div>
+    <div>
+      <div class="section-h"><h2>Leaderboard</h2><span class="sub" id="lbSub"></span></div>
+      <div class="boards" id="boards"></div>
+    </div>
+    <div id="mockWrap"></div>
+  </section>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   PARTICIPANT DATA — source: Participants Data.xlsx (one sheet per cert)
+   Shape per participant (cert-keyed where a learner holds several certs):
+   { name, email, role, certs:[...],
+     weeks:{certId:[W1..W8]}, mockScore:{certId:n|null},
+     certified:{certId:bool}, certDate:{certId:"Dec 23, 2026"} }
+   Plain arrays / booleans (spec shape) are also accepted and apply to every cert.
+   ═══════════════════════════════════════════════════════════════ */
+const DEMO_PARTICIPANTS = [
+  {name:"Akash Mugundhan",email:"akash.mugundhan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Akash Singhal",email:"akash.singhal@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Amaladeepan S",email:"amaladeepan.s@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Arun Ashok",email:"arun.ashok@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Arvind Rana",email:"arvind.rana@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Balasubramanian subramanian",email:"balasubramanian.natarajan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Chandu Pilla",email:"chandubhargavi.pilla@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Dinesh Prasa",email:"dinesh.prasa@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Dinesh T",email:"dinesh.t@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"E Vijay Chandra Kanth",email:"evijay.chandrakanth@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ekta",email:"ekta@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ganesh Maddu",email:"ganesh.ganesh@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Gnanaprakash R",email:"gnanaprakash.r@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Gokulan Muralidharan",email:"gokulan.muralidharan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Hitesh Kumar",email:"hitesh.kumar@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Kalaivanan Mahadevan",email:"kalaivanan.mahadevan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Karra Anil Kumar",email:"anilkumar.karra@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Karthik Deshpande",email:"karthik.d@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Karthika Kathiresan",email:"karthika.kathiresan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Kavya K",email:"kavya.k@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Krupa Pulijala",email:"krupa.pulijala@uipath.com",role:"Senior Automation Developer",certs:['agentic'],weeks:{agentic:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Krupa Shah",email:"krupa.shah@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Maadesh Muruganantham",email:"maadesh.muruganantham@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Marigalla Keshava",email:"marigalla.keshava@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mayank Bhargav",email:"mayank.bhargav@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mitali Jain",email:"mitali.jain@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mohana Priya Chandran",email:"mohana.chandran@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mohd Ali",email:"mohd.muzafferali@uipath.com",role:"Automation Developer",certs:['agentic'],weeks:{agentic:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mounika Patnam",email:"mounika.patnam@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Naseem Fatima Akthar Banu",email:"naseem.akthar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Niraj Shegokar",email:"niraj.vasant@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Palani P",email:"palanikumar.p@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Prashanthi Salakalakonda",email:"prashanthi.salakalakonda@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rajani S",email:"rajani.s@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ranjith Srinivasan",email:"ranjith.srinivasan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sabareeswaran Natarajan",email:"sabareeswaran.natarajan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sachin Khandagale",email:"sachin.khandagale@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sachin S",email:"sachin.s@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Saheb Mukherjee",email:"saheb.mukherjee@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sai Kumar Mandha",email:"saikumar.mandha@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Saketh Revilla",email:"saketh.revilla@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Shriram Saljoshi",email:"shriram.saljoshi@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Shubham Chavan",email:"shubhamsudam.chavan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Somisetty Kumar",email:"somisetty.kumar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sreekumar Uppara",email:"sreekumar.uppara@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sudeeksha Makhija",email:"sudeeksha.makhija@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Suraj Chauhan",email:"suraj.chauhan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Thirumalai Venkatesh",email:"thirumalai.venkatesh@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Udhaya P",email:"udhaya.kumar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Umamageswari Deivasigamani",email:"umamageswari.deivasigamani@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Vasanth S",email:"vasanth.s@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Vasantha R",email:"vasantha.r@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Veeradivyesh Hariram",email:"veeradivyesh.hariram@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Vinayak Bagadi",email:"vinayak.bagadi@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"K Veerapandiyan",email:"k.veerapandiyan@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mahaveer Sai",email:"mahaveer.sai@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Naveen Aakash Somasundaram Sabapathy",email:"naveen.somasundaram@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ragini Mysurappana Palya Lingadevaru",email:"ragini.mysurappana@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rohit Gupta",email:"rohit.gupta@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Vinay Awasthi",email:"vinay.awasthi@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Aasish Alexander",email:"aasish.alexander@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Aditi Jain",email:"aditi.jain@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Dimpy Sharma",email:"dimpy.sharma@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Lisha Anbazhagan",email:"lisha.anbazhagan@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Musaveer Pasha",email:"musaveer.pasha@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Nune Lakshmi Gayathri",email:"nune.lakshmigayathri@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Pratixa Naiksatam",email:"pratixa.naiksatam@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rahul Ukey",email:"rahul.ukey@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sakaar Jain",email:"sakaar.jain@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Tanu Verma",email:"tanu.verma@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ajay Steevan Monteiro",email:"ajay.steevan@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Anand Karn",email:"anand.karn@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Arghodip Sarkar",email:"arghodip.sarkar@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ashish Tyagi",email:"ashish.tyagi@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ashish Yadav",email:"ashishkumar.yadav@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Ashok Masa",email:"masa.ashok@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Bhuvaneswari M",email:"bhuvaneswari.m@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Chaitali Shelke Shelke",email:"chaitalivikarm.shelke@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Geeta Kotur",email:"geeta.kotur@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Guruswamy Bhusarapu",email:"guruswamy.bhusarapu@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Inayathulla Obulam Palli",email:"inayathulla.obulampalli@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Jhansi V",email:"jhansi.v@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Kalki Kumar",email:"kalki.sureshkumar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Karthiga Nandakumar",email:"karthiga.nandakumar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Kavin S",email:"kavin.s@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Khizar Sharif",email:"khizar.sharif@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Koussighan AM",email:"koussighan.am@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Manisha Jayasekar",email:"manisha.jayasekar@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mohammed Imran",email:"mohammed.imran@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mulla Chesmi",email:"mulla.chesmi@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Muthu Raj",email:"muthu.raj@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Namburi Rajesh",email:"namburi.rajesh@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Naresh Manchala",email:"nareshkumar.manchala@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Nikhitha KV",email:"nikitha.kv@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rameshwar Mahajan",email:"rameshwar.mahajan@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sagar Das",email:"sagar.das@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Sai Pranav Sarma",email:"pranav.sarma@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Shahnawaz Anwar",email:"shahnawaz.anwar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Shaik Javeed",email:"shaikwasim.javeed@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Shalu Mittal",email:"shalu.mittal@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Singoji Durga Bhavani",email:"durga.bhavani@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Souvik Chakraborty",email:"souvik.chakraborty@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Srinith Rajoli",email:"srinith.rajoli@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Venkatesh Puli",email:"venkatesh.puli@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Mala Kanagaraj",email:"mala.kanagaraj@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Moideen Shahul Hameed A",email:"moideenshahul.hameed@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Pradeep Tomar",email:"pradeep.tomar@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rahul Polasani",email:"rahul.polasani@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
+  {name:"Rajat Gupta",email:"rajat.gupta@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}}
+];
+
+/* Optional: pin the program week (1–8). null = derive from today's date. */
+const CURRENT_WEEK_OVERRIDE = null;
+
+const PROGRAM_START = new Date(2026, 10, 2);   // Nov 2, 2026
+const MOCK_DEADLINE = new Date(2026, 11, 18);  // Dec 18, 2026
+const EXAM_DEADLINE = new Date(2026, 11, 26);  // Dec 26, 2026
+const EXAM_OPENS    = new Date(2026, 11, 21);  // Week 8 start
+
+const CERTS = [
+  {id:'agentic',   name:'Agentic Professional',            short:'Agentic',    track:'A', color:'var(--c-agentic)',   ink:'var(--ink-agentic)',   hex:'#3D9EFF'},
+  {id:'testcloud', name:'Test Cloud Professional',         short:'Test Cloud', track:'A', color:'var(--c-testcloud)', ink:'var(--ink-testcloud)', hex:'#A78BFA'},
+  {id:'ba',        name:'Business Analyst Professional',   short:'BA',         track:'B', color:'var(--c-ba)',        ink:'var(--ink-ba)',        hex:'#FB923C'},
+  {id:'sa',        name:'Solution Architect Professional', short:'SA',         track:'B', color:'var(--c-sa)',        ink:'var(--ink-sa)',        hex:'#34D399'},
+];
+const CERT = Object.fromEntries(CERTS.map(c=>[c.id,c]));
+
+const ATYPES = {
+  self:  {label:'Self-paced', cls:'a-self'},
+  ilt:   {label:'ILT',        cls:'a-ilt'},
+  tutor: {label:'Tutoring',   cls:'a-tutor'},
+  mock:  {label:'Mock Test',  cls:'a-mock'},
+  exam:  {label:'Exam',       cls:'a-exam'},
+  track: {label:'Track Only', cls:'a-track'},
+};
+const A = (t,d)=>({t,d});
+const SCHEDULE = [
+  {w:1,range:'Nov 2 – 8',   theme:'Kick-off: self-learning for all tracks',
+   a:{agentic:A('self','Self-learning · progress tracking'),testcloud:A('self','Self-learning · progress tracking'),ba:A('self','Self-learning · progress tracking'),sa:A('self','Self-learning · progress tracking')}},
+  {w:2,range:'Nov 9 – 15',  theme:'Agentic office hours begin',
+   a:{agentic:A('ilt','Office Hours · 2 sessions'),testcloud:A('self','Self-learning · tracking'),ba:A('self','Self-learning · tracking'),sa:A('self','Self-learning · tracking')}},
+  {w:3,range:'Nov 16 – 22', theme:'Self-learning for all tracks',
+   a:{agentic:A('self','Self-learning · progress tracking'),testcloud:A('self','Self-learning · progress tracking'),ba:A('self','Self-learning · progress tracking'),sa:A('self','Self-learning · progress tracking')}},
+  {w:4,range:'Nov 23 – 29', theme:'Instructor-led training, block 1',
+   a:{agentic:A('ilt','2 hr × 2 · sessions 1–2 of 5'),testcloud:A('ilt','2 hr × 2 · sessions 1–2 of 5'),ba:A('track','Progress tracking'),sa:A('track','Progress tracking')}},
+  {w:5,range:'Nov 30 – Dec 6', theme:'Instructor-led training, block 2',
+   a:{agentic:A('ilt','2 hr × 2 · sessions 3–4 of 5'),testcloud:A('ilt','2 hr × 2 · sessions 3–4 of 5'),ba:A('track','Progress tracking'),sa:A('track','Progress tracking')}},
+  {w:6,range:'Dec 7 – 13',  theme:'Final ILT and tutoring',
+   a:{agentic:A('ilt','Session 5 of 5 + tutoring'),testcloud:A('ilt','Session 5 of 5 + tutoring'),ba:A('tutor','Tutoring session'),sa:A('tutor','Tutoring session')}},
+  {w:7,range:'Dec 14 – 20', theme:'Mock test and readiness check',
+   a:{agentic:A('mock','Score ≥ 85% by Dec 18'),testcloud:A('mock','Score ≥ 85% by Dec 18'),ba:A('track','Progress validation'),sa:A('track','Progress validation')}},
+  {w:8,range:'Dec 21 – 26', theme:'Certification exam window',
+   a:{agentic:A('exam','Complete by Dec 26'),testcloud:A('exam','Complete by Dec 26'),ba:A('exam','Complete by Dec 26'),sa:A('exam','Complete by Dec 26')}},
+];
+
+const STATUS = {
+  cert:    {label:'Certified',   cls:'st-cert',     color:'var(--s-cert)',     rank:5},
+  ontrack: {label:'On Track',    cls:'st-ontrack',  color:'var(--s-ontrack)',  rank:4},
+  progress:{label:'In Progress', cls:'st-progress', color:'var(--s-progress)', rank:3},
+  behind:  {label:'Behind',      cls:'st-behind',   color:'var(--s-behind)',   rank:2},
+  none:    {label:'Not Started', cls:'st-none',     color:'var(--s-none)',     rank:1},
+};
+
+/* ─── Data normalisation ─── */
+function pickFor(v, cert, dflt){
+  if (v === undefined || v === null) return dflt;
+  if (Array.isArray(v) || typeof v !== 'object') return v;
+  return (cert in v) ? v[cert] : dflt;
+}
+function normalize(list){
+  return list.map(p=>{
+    const certs = (p.certs||[]).filter(c=>CERT[c]);
+    const by = {};
+    certs.forEach(c=>{
+      const w = pickFor(p.weeks, c, []);
+      const weeks = Array.from({length:8},(_,i)=>clamp(+((w||[])[i])||0));
+      const ms = pickFor(p.mockScore, c, null);
+      by[c] = {weeks, mockScore: (ms===null||ms===''||ms===undefined)?null:clamp(+ms),
+               certified: !!pickFor(p.certified, c, false), certDate: pickFor(p.certDate, c, '') || ''};
+    });
+    return {name:p.name, email:p.email||'', role:p.role||'', certs, by};
+  });
+}
+const clamp = n => Math.max(0, Math.min(100, Math.round(n)));
+const activeData = normalize(DEMO_PARTICIPANTS);
+
+/* ─── Derived program state ─── */
+function weekOf(d){
+  if (CURRENT_WEEK_OVERRIDE) return CURRENT_WEEK_OVERRIDE;
+  const day = Math.floor((d - PROGRAM_START)/86400000);
+  if (day < 0) return 0;
+  return Math.min(9, Math.floor(day/7)+1); // 9 = program finished
+}
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const CURRENT_WEEK = weekOf(TODAY);
+const CW = Math.max(1, Math.min(8, CURRENT_WEEK));
+
+const ENROLL = [];
+activeData.forEach(p=>p.certs.forEach(c=>ENROLL.push({p, cert:c, ...p.by[c]})));
+
+// Reporting week: the latest week that has any progress logged; otherwise the last completed week.
+const latestDataWeek = ENROLL.reduce((m,e)=>{e.weeks.forEach((v,i)=>{ if(v>0 && i+1>m) m=i+1; }); return m;},0);
+const REPORT_WEEK = latestDataWeek || Math.max(1, Math.min(8, CURRENT_WEEK-1));
+
+const overall = e => e.weeks.reduce((a,b)=>a+b,0)/8;
+function statusOf(val, certified){
+  if (certified) return 'cert';
+  if (val <= 0) return 'none';
+  if (val >= 80) return 'ontrack';
+  if (val >= 40) return 'progress';
+  return 'behind';
+}
+const fmtPct = v => (Math.round(v*10)/10).toFixed(v%1 && v<100 ? 1 : 0) + '%';
+const esc = s => String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = n => n.split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0]).join('').toUpperCase();
+const $ = id => document.getElementById(id);
+const fmtDate = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+
+/* ─── OVERVIEW ─── */
+function renderOverview(){
+  const certifiedN = ENROLL.filter(e=>e.certified).length;
+  const multi = activeData.filter(p=>p.certs.length>1).length;
+  const wkVals = ENROLL.map(e=>e.weeks[REPORT_WEEK-1]);
+  const avgWk = wkVals.length ? wkVals.reduce((a,b)=>a+b,0)/wkVals.length : 0;
+  const logged = wkVals.filter(v=>v>0).length;
+  const cwLabel = CURRENT_WEEK===0 ? 'Pre-start' : CURRENT_WEEK>8 ? 'Complete' : CURRENT_WEEK;
+  const cwSub = CURRENT_WEEK===0 ? 'Program starts Nov 2' : CURRENT_WEEK>8 ? 'Program ended Dec 26' : SCHEDULE[CW-1].range + ' · ' + SCHEDULE[CW-1].theme;
+  $('kpis').innerHTML = `
+    <div class="card kpi"><span class="eyebrow">Unique learners</span><span class="v">${activeData.length}</span><span class="s"><span class="num">${ENROLL.length}</span> cert enrollments · <span class="num">${multi}</span> in 2+ tracks</span></div>
+    <div class="card kpi"><span class="eyebrow">Current week</span><span class="v">${cwLabel}${typeof cwLabel==='number'?'<small> / 8</small>':''}</span><span class="s">${esc(cwSub)}</span></div>
+    <div class="card kpi gold"><span class="eyebrow">Certifications earned</span><span class="v">${certifiedN}<small> / ${ENROLL.length}</small></span><span class="s">${certifiedN? fmtPct(certifiedN/ENROLL.length*100)+' of enrollments' : 'Exams open Dec 21 (Week 8)'}</span></div>
+    <div class="card kpi"><span class="eyebrow">Avg weekly progress</span><span class="v">${fmtPct(avgWk)}</span><span class="s">Week ${REPORT_WEEK} · <span class="num">${logged}</span> of <span class="num">${ENROLL.length}</span> enrollments logged</span></div>`;
+
+  $('certsSub').textContent = `Progress bar = average overall completion across 8 weeks · status from Week ${REPORT_WEEK}`;
+  $('certCards').innerHTML = CERTS.map(c=>{
+    const es = ENROLL.filter(e=>e.cert===c.id);
+    const cert = es.filter(e=>e.certified).length;
+    const inProg = es.filter(e=>!e.certified && e.weeks.some(v=>v>0)).length;
+    const avg = es.length ? es.reduce((a,e)=>a+overall(e),0)/es.length : 0;
+    const counts = {ontrack:0,progress:0,behind:0,none:0,cert:0};
+    es.forEach(e=>counts[statusOf(e.weeks[REPORT_WEEK-1], e.certified)]++);
+    const order = ['cert','ontrack','progress','behind','none'];
+    const act = SCHEDULE[CW-1].a[c.id];
+    return `<article class="card cert" style="--cc:${c.color}">
+      <div class="cert-h"><h3>${c.name}</h3><span class="track-tag">Track ${c.track}</span></div>
+      <div class="cert-stats">
+        <div><b>${es.length}</b><span>Enrolled</span></div>
+        <div><b>${inProg}</b><span>In progress</span></div>
+        <div><b style="color:var(--s-cert-ink)">${cert}</b><span>Certified</span></div>
+      </div>
+      <div>
+        <div class="bar-row"><span>Overall completion</span><b>${fmtPct(avg)}</b></div>
+        <div class="bar" role="img" aria-label="${fmtPct(avg)} overall"><i style="width:${avg}%"></i></div>
+      </div>
+      <div>
+        <div class="bar-row"><span>Status · Week ${REPORT_WEEK}</span></div>
+        <div class="stack">${order.filter(k=>counts[k]).map(k=>`<i style="width:${counts[k]/es.length*100}%;background:${STATUS[k].color}" title="${STATUS[k].label}: ${counts[k]}"></i>`).join('')}</div>
+        <div class="legend">${order.filter(k=>counts[k]||k!=='cert').map(k=>`<span><i class="sw" style="background:${STATUS[k].color}"></i>${STATUS[k].label} <b>${counts[k]}</b></span>`).join('')}</div>
+      </div>
+      <div class="this-week"><span class="atype ${ATYPES[act.t].cls}">${ATYPES[act.t].label}</span><span>Week ${CW}: ${esc(act.d)}</span></div>
+    </article>`;
+  }).join('');
+
+  $('timeline').innerHTML = SCHEDULE.map(s=>{
+    const cls = s.w===CURRENT_WEEK ? 'now' : s.w<CURRENT_WEEK ? 'past' : '';
+    const types = [...new Set(Object.values(s.a).map(x=>x.t))];
+    return `<div class="tl-w ${cls}">
+      ${s.w===CURRENT_WEEK?'<span class="now-flag">Now</span>':''}
+      <span class="wn">W${s.w}</span>
+      <span class="wt">${esc(s.theme)}</span>
+      <span class="wd mono">${s.range}</span>
+      <div class="ticks">${CERTS.map(c=>`<i style="background:${s.a[c.id].t==='self'||s.a[c.id].t==='track'?'var(--line-strong)':c.color}" title="${c.short}: ${ATYPES[s.a[c.id].t].label}"></i>`).join('')}</div>
+    </div>`;
+  }).join('');
+  const dMock = Math.ceil((MOCK_DEADLINE-TODAY)/86400000), dExam = Math.ceil((EXAM_DEADLINE-TODAY)/86400000);
+  $('tlFoot').innerHTML = `
+    <span>Coloured ticks = live sessions (ILT, tutoring, mock, exam) per track: ${CERTS.map(c=>`<span style="color:${c.ink};font-weight:600">${c.short}</span>`).join(' · ')}</span>
+    <span>Mock deadline in <b>${Math.max(0,dMock)}</b> days</span>
+    <span>Exam deadline in <b>${Math.max(0,dExam)}</b> days</span>`;
+}
+
+/* ─── SCHEDULE ─── */
+function renderSchedule(){
+  $('typeKey').innerHTML = Object.values(ATYPES).map(a=>`<span class="atype ${a.cls}">${a.label}</span>`).join('');
+  $('weekCards').innerHTML = SCHEDULE.map(s=>`
+    <article class="card wk ${s.w===CURRENT_WEEK?'now':''}">
+      <div class="wk-h"><b>Week ${s.w}${s.w===CURRENT_WEEK?' · current':''}</b><span class="mono">${s.range}</span></div>
+      <div class="wk-theme">${esc(s.theme)}</div>
+      ${CERTS.map(c=>{const a=s.a[c.id];return `<div class="act" style="--cc:${c.color}">
+        <span class="who"><span class="d"></span>${c.short}</span>
+        <span class="what"><span class="atype ${ATYPES[a.t].cls}">${ATYPES[a.t].label}</span>${esc(a.d)}</span></div>`}).join('')}
+    </article>`).join('');
+}
+
+/* ─── PARTICIPANTS ─── */
+const ui = {q:'', cert:'all', week:REPORT_WEEK, sort:{key:'name', dir:1}};
+function rowsFor(){
+  return activeData.filter(p=>ui.cert==='all' || p.certs.includes(ui.cert)).map(p=>{
+    const certs = ui.cert==='all' ? p.certs : [ui.cert];
+    const es = certs.map(c=>({cert:c,...p.by[c]}));
+    const wk = es.reduce((a,e)=>a+e.weeks[ui.week-1],0)/es.length;
+    const ov = es.reduce((a,e)=>a+overall(e),0)/es.length;
+    const allCert = es.every(e=>e.certified);
+    const st = statusOf(wk, allCert);
+    return {p, wk, ov, st, certCount:p.certs.length};
+  });
+}
+function renderParticipants(){
+  const cols = [
+    {k:'name', l:'Name'},
+    {k:'certs', l:'Certifications'},
+    {k:'wk', l:`Week ${ui.week} progress`},
+    {k:'ov', l:'Overall %'},
+    {k:'st', l:'Status'},
+  ];
+  $('thead').innerHTML = cols.map(c=>{
+    const on = ui.sort.key===c.k;
+    return `<th scope="col" ${on?`aria-sort="${ui.sort.dir>0?'ascending':'descending'}"`:''}><button type="button" data-sort="${c.k}">${c.l}<span class="arr">${on?(ui.sort.dir>0?'▲':'▼'):'↕'}</span></button></th>`;
+  }).join('');
+  const q = ui.q.trim().toLowerCase();
+  let rows = rowsFor().filter(r=>!q || r.p.name.toLowerCase().includes(q) || r.p.email.toLowerCase().includes(q));
+  const k = ui.sort.key, d = ui.sort.dir;
+  rows.sort((a,b)=>{
+    let x,y;
+    if (k==='name'){x=a.p.name.toLowerCase();y=b.p.name.toLowerCase();}
+    else if (k==='certs'){x=a.certCount;y=b.certCount;}
+    else if (k==='st'){x=STATUS[a.st].rank;y=STATUS[b.st].rank;}
+    else {x=a[k];y=b[k];}
+    return (x<y?-1:x>y?1:0)*d || a.p.name.localeCompare(b.p.name);
+  });
+  $('tbody').innerHTML = rows.length ? rows.map(r=>{
+    const c1 = CERT[r.p.certs[0]], c2 = CERT[r.p.certs[1]];
+    const barColor = ui.cert==='all' ? STATUS[r.st].color : CERT[ui.cert].color;
+    return `<tr>
+      <td><div class="person"><span class="av ${c2?'multi':''}" style="--a1:${c1.color};--a2:${(c2||c1).color}" aria-hidden="true">${esc(initials(r.p.name))}</span>
+        <div style="min-width:0"><div class="nm">${esc(r.p.name)}</div>${r.p.email?`<div class="em">${esc(r.p.email)}</div>`:''}</div></div></td>
+      <td><div class="chips">${r.p.certs.map(id=>`<span class="chip" style="--cc:${CERT[id].color}"><span class="d"></span>${CERT[id].short}</span>`).join('')}</div></td>
+      <td><div class="pcell"><div class="bar" style="--cc:${barColor}"><i style="width:${r.wk}%"></i></div><b>${fmtPct(r.wk)}</b></div></td>
+      <td><div class="pcell"><div class="bar" style="--cc:var(--accent)"><i style="width:${r.ov}%"></i></div><b>${fmtPct(r.ov)}</b></div></td>
+      <td><span class="status ${STATUS[r.st].cls}">${STATUS[r.st].label}</span></td>
+    </tr>`;}).join('') : `<tr class="empty-row"><td colspan="5">No participants match “${esc(ui.q)}”${ui.cert!=='all'?' in '+CERT[ui.cert].short:''}.</td></tr>`;
+  $('tCount').innerHTML = `Showing <span class="num">${rows.length}</span> of <span class="num">${ui.cert==='all'?activeData.length:activeData.filter(p=>p.certs.includes(ui.cert)).length}</span> participants`;
+  $('tNote').textContent = ui.cert==='all' ? 'Learners in several tracks show the average across their tracks' : `Values for ${CERT[ui.cert].name}`;
+}
+function setupParticipants(){
+  $('certFilter').innerHTML = [{id:'all',short:'All',color:'var(--accent)'},...CERTS].map(c=>
+    `<button type="button" data-cert="${c.id}" aria-pressed="${ui.cert===c.id}" style="--cc:${c.color}">${c.id!=='all'?'<span class="d"></span>':''}${c.short} <span class="num" style="color:var(--muted)">${c.id==='all'?activeData.length:ENROLL.filter(e=>e.cert===c.id).length}</span></button>`).join('');
+  $('weekSel').innerHTML = SCHEDULE.map(s=>`<option value="${s.w}" ${s.w===ui.week?'selected':''}>Week ${s.w}${s.w===CURRENT_WEEK?' (current)':''}</option>`).join('');
+  $('certFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.cert=b.dataset.cert;
+    $('certFilter').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderParticipants();});
+  $('q').addEventListener('input',e=>{ui.q=e.target.value;renderParticipants();});
+  $('weekSel').addEventListener('change',e=>{ui.week=+e.target.value;renderParticipants();});
+  $('thead').addEventListener('click',e=>{const b=e.target.closest('button[data-sort]');if(!b)return;const k=b.dataset.sort;
+    ui.sort = ui.sort.key===k ? {key:k,dir:-ui.sort.dir} : {key:k,dir:(k==='name'?1:-1)}; renderParticipants();});
+}
+
+/* ─── COMPLETIONS ─── */
+const SEAL = '<svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"/></svg>';
+function renderCompletions(){
+  const done = ENROLL.filter(e=>e.certified);
+  $('cntC').textContent = done.length ? done.length : '';
+  if (!done.length){
+    const days = Math.max(0, Math.ceil((EXAM_OPENS-TODAY)/86400000));
+    $('complTop').innerHTML = `<div class="card empty">
+      <div class="medal"><svg viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg></div>
+      <div><h3>No certifications yet</h3>
+      <p>The certification wall fills in once Week 8 exams begin on Dec 21. Each passed exam appears here with the learner's name, cert badge and date.</p>
+      <div class="countdown"><div><b>${days}</b><span>days to exam window</span></div><div><b>${ENROLL.length}</b><span>enrollments eligible</span></div><div><b>Dec 26</b><span>exam deadline</span></div></div></div></div>`;
+  } else {
+    done.sort((a,b)=>new Date(b.certDate||0)-new Date(a.certDate||0));
+    $('complTop').innerHTML = `<div class="section-h"><h2>Certification wall</h2><span class="sub"><span class="num">${done.length}</span> certifications earned</span></div>
+      <div class="wall">${done.map(e=>{const c=CERT[e.cert];return `<div class="card badge-card"><span class="seal" style="--cc:${c.color}">${SEAL}</span>
+        <div style="min-width:0"><div class="nm">${esc(e.p.name)}</div><div class="meta">${c.name}</div><div class="meta mono">${esc(e.certDate||'Date pending')}</div></div></div>`}).join('')}</div>`;
+  }
+  $('lbSub').textContent = `Top 5 per track by Week ${REPORT_WEEK} progress`;
+  $('boards').innerHTML = CERTS.map(c=>{
+    const top = ENROLL.filter(e=>e.cert===c.id && e.weeks[REPORT_WEEK-1]>0)
+      .sort((a,b)=>b.weeks[REPORT_WEEK-1]-a.weeks[REPORT_WEEK-1] || overall(b)-overall(a)).slice(0,5);
+    const total = ENROLL.filter(e=>e.cert===c.id).length;
+    return `<div class="card board" style="--cc:${c.color}"><h3><span class="d"></span>${c.name}</h3>
+      ${top.length ? `<ol>${top.map((e,i)=>`<li><span class="rk">${i+1}</span><span class="nm">${esc(e.p.name)}</span>
+        <div class="pcell" style="min-width:0"><div class="bar"><i style="width:${e.weeks[REPORT_WEEK-1]}%"></i></div><b>${fmtPct(e.weeks[REPORT_WEEK-1])}</b></div></li>`).join('')}</ol>`
+      : `<div class="none">No Week ${REPORT_WEEK} progress logged yet for the ${total} enrolled learners.</div>`}</div>`;
+  }).join('');
+  const mocks = ENROLL.filter(e=>CERT[e.cert].track==='A' && e.mockScore!==null);
+  $('mockWrap').innerHTML = mocks.length ? `<div class="section-h"><h2>Mock test results</h2><span class="sub">Track A · pass mark 85% · due Dec 18</span></div>
+    <div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Certification</th><th>Score</th><th>Result</th></tr></thead><tbody>
+    ${mocks.sort((a,b)=>b.mockScore-a.mockScore).map(e=>`<tr><td>${esc(e.p.name)}</td><td><span class="chip" style="--cc:${CERT[e.cert].color}"><span class="d"></span>${CERT[e.cert].short}</span></td>
+      <td class="num">${e.mockScore}%</td><td><span class="status ${e.mockScore>=85?'st-ontrack':'st-behind'}">${e.mockScore>=85?'Ready for exam':'Below 85%'}</span></td></tr>`).join('')}
+    </tbody></table></div></div>` : '';
+}
+
+/* ─── Header, tabs, theme ─── */
+function renderHeader(){
+  $('wkBadgeTxt').textContent = CURRENT_WEEK===0 ? 'Starts Nov 2' : CURRENT_WEEK>8 ? 'Program complete' : `Week ${CURRENT_WEEK} of 8 · ${SCHEDULE[CURRENT_WEEK-1].range}`;
+  $('cntP').textContent = activeData.length;
+}
+const TABS = ['overview','schedule','participants','completions'];
+function showTab(t){
+  if (!TABS.includes(t)) t='overview';
+  TABS.forEach(x=>{ $('view-'+x).hidden = x!==t; $('tab-'+x).setAttribute('aria-selected', x===t); });
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;
+  if (location.hash !== '#'+b.dataset.tab) location.hash = b.dataset.tab; else showTab(b.dataset.tab);});
+window.addEventListener('hashchange',()=>showTab(location.hash.slice(1)));
+
+const SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const MOON='<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+function currentTheme(){
+  const t = document.documentElement.getAttribute('data-theme');
+  if (t) return t;
+  return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+function paintThemeIcon(){ $('themeIco').innerHTML = currentTheme()==='dark' ? SUN : MOON; }
+try { const saved = localStorage.getItem('hcl-lep-theme'); if (saved) document.documentElement.setAttribute('data-theme', saved); } catch(e){}
+$('themeBtn').addEventListener('click',()=>{
+  const next = currentTheme()==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  try { localStorage.setItem('hcl-lep-theme', next); } catch(e){}
+  paintThemeIcon();
+});
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,3200); }
+
+/* ─── Excel export (real .xlsx, built in-page) ─── */
+const CRC_T = (()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC_T[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zip(files){
+  const enc=new TextEncoder(), parts=[], central=[]; let off=0;
+  const now=new Date(), dt=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate(), tm=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+  for (const f of files){
+    const name=enc.encode(f.name), data=enc.encode(f.data), crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));
+    h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);
+    h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);
+    h.setUint16(26,name.length,true);h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer),name,data);
+    const c=new DataView(new ArrayBuffer(46));
+    c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);
+    c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);
+    c.setUint16(28,name.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),name);
+    off+=30+name.length+data.length;
+  }
+  const cSize=central.reduce((a,b)=>a+b.length,0), e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cSize,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+const xesc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'');
+const colL = i => { let s=''; i++; while(i){const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26);} return s; };
+function sheetXml(title, header, rows, widths){
+  const cell=(v,r,c,style)=>{const ref=colL(c)+r; const s=style?` s="${style}"`:'';
+    if (v===null||v===undefined||v==='') return `<c r="${ref}"${s}/>`;
+    if (typeof v==='number') return `<c r="${ref}"${s}><v>${v}</v></c>`;
+    return `<c r="${ref}" t="inlineStr"${s}><is><t xml:space="preserve">${xesc(v)}</t></is></c>`;};
+  let x=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="3" topLeftCell="A4" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>`;
+  widths.forEach((w,i)=>x+=`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`);
+  x+=`</cols><sheetData><row r="1">${cell(title,1,0,1)}</row><row r="2"/><row r="3">${header.map((h,i)=>cell(h,3,i,2)).join('')}</row>`;
+  rows.forEach((r,ri)=>{x+=`<row r="${ri+4}">${r.map((v,ci)=>cell(v,ri+4,ci,0)).join('')}</row>`;});
+  return x+`</sheetData></worksheet>`;
+}
+function buildWorkbook(){
+  const sheets=[];
+  const H=['Sl No','Employee Name','Email ID','Role','Week 1','Week 2','Week 3','Week 4','Week 5','Week 6','Week 7','Week 8','Overall %','Mock Score','Exam Date','Certification','Status'];
+  const W=[7,30,36,26,8,8,8,8,8,8,8,8,10,11,14,14,13];
+  const sumRows = CERTS.map(c=>{const es=ENROLL.filter(e=>e.cert===c.id);
+    return [c.name,'Track '+c.track,es.length,es.filter(e=>!e.certified&&e.weeks.some(v=>v>0)).length,es.filter(e=>e.certified).length,
+      +(es.reduce((a,e)=>a+overall(e),0)/(es.length||1)).toFixed(1), +(es.reduce((a,e)=>a+e.weeks[REPORT_WEEK-1],0)/(es.length||1)).toFixed(1)];});
+  sheets.push({name:'Summary', xml:sheetXml(`Learning Excellence Certification Program · exported ${fmtDate(new Date())} · Week ${CW} of 8`,
+    ['Certification','Track','Enrolled','In Progress','Certified','Avg Overall %',`Avg Week ${REPORT_WEEK} %`], sumRows,[34,10,10,12,10,14,14])});
+  const titles={agentic:'UiPath Certified Professional Agentic Automation Professional',testcloud:'UiPath Certified Professional Test Cloud Architect Professional',ba:'UiPath Certified Professional Automation Business Analyst Professional',sa:'UiPath Certified Professional Automation Solution Architect Professional'};
+  CERTS.forEach(c=>{
+    const es=ENROLL.filter(e=>e.cert===c.id).sort((a,b)=>a.p.name.localeCompare(b.p.name));
+    const rows=es.map((e,i)=>[i+1,e.p.name,e.p.email,e.p.role,...e.weeks,+overall(e).toFixed(1),e.mockScore,e.certDate,e.certified?'Yes':'No',STATUS[statusOf(e.weeks[REPORT_WEEK-1],e.certified)].label]);
+    sheets.push({name:c.name.slice(0,31), xml:sheetXml(titles[c.id],H,rows,W)});
+  });
+  const files=[
+    {name:'[Content_Types].xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>${sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')}</Types>`},
+    {name:'_rels/.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+    {name:'xl/workbook.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>${sheets.map((s,i)=>`<sheet name="${xesc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')}</sheets></workbook>`},
+    {name:'xl/_rels/workbook.xml.rels',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml',data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="13"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FF0E1626"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs></styleSheet>`},
+    ...sheets.map((s,i)=>({name:`xl/worksheets/sheet${i+1}.xml`,data:s.xml})),
+  ];
+  return zip(files);
+}
+$('exportBtn').addEventListener('click', async ()=>{
+  const blob = buildWorkbook();
+  const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const filename = `HCL_Learning_Excellence_Progress_${stamp}.xlsx`;
+  if (window.claude && typeof window.claude.use === 'function'){
+    const dl = await window.claude.use('downloads');
+    if (!dl){ toast('Export is not available in this view.'); return; }
+    try { await dl.save({filename, data:blob}); toast('Workbook saved'); }
+    catch(err){ if (err && err.code==='declined') return; toast(err && err.code==='rate_limited' ? 'A save prompt is already open.' : 'Export failed. Try again.'); }
+    return;
+  }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast('Workbook downloaded');
+});
+
+/* ─── Boot ─── */
+renderHeader(); renderOverview(); renderSchedule(); setupParticipants(); renderParticipants(); renderCompletions(); paintThemeIcon();
+showTab(location.hash.slice(1));
+</script>
+
 </body>
 </html>
