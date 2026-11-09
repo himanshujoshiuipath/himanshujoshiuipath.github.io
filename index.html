@@ -378,18 +378,18 @@ const A = (t,d)=>({t,d});
 const SCHEDULE = [
   {w:1,range:'Nov 2 – 8',   theme:'Kick-off: self-learning for all tracks',
    a:{agentic:A('self','Self-learning · progress tracking'),testcloud:A('self','Self-learning · progress tracking'),ba:A('self','Self-learning · progress tracking'),sa:A('self','Self-learning · progress tracking')}},
-  {w:2,range:'Nov 9 – 15',  theme:'Agentic office hours begin',
-   a:{agentic:A('ilt','Office Hours · 2 sessions'),testcloud:A('self','Self-learning · tracking'),ba:A('self','Self-learning · tracking'),sa:A('self','Self-learning · tracking')}},
-  {w:3,range:'Nov 16 – 22', theme:'Self-learning for all tracks',
-   a:{agentic:A('self','Self-learning · progress tracking'),testcloud:A('self','Self-learning · progress tracking'),ba:A('self','Self-learning · progress tracking'),sa:A('self','Self-learning · progress tracking')}},
+  {w:2,range:'Nov 9 – 15',  theme:'Office hours for Agentic and Test Cloud',
+   a:{agentic:A('ilt','1 Office Hours + self-learning / tracking'),testcloud:A('ilt','1 Office Hours + self-learning / tracking'),ba:A('self','Self-learning · tracking'),sa:A('self','Self-learning · tracking')}},
+  {w:3,range:'Nov 16 – 22', theme:'Office hours for Agentic and Test Cloud',
+   a:{agentic:A('ilt','1 Office Hours + self-learning / tracking'),testcloud:A('ilt','1 Office Hours + self-learning / tracking'),ba:A('self','Self-learning · tracking'),sa:A('self','Self-learning · tracking')}},
   {w:4,range:'Nov 23 – 29', theme:'Instructor-led training, block 1',
    a:{agentic:A('ilt','2 hr × 2 · sessions 1–2 of 5'),testcloud:A('ilt','2 hr × 2 · sessions 1–2 of 5'),ba:A('track','Progress tracking'),sa:A('track','Progress tracking')}},
   {w:5,range:'Nov 30 – Dec 6', theme:'Instructor-led training, block 2',
    a:{agentic:A('ilt','2 hr × 2 · sessions 3–4 of 5'),testcloud:A('ilt','2 hr × 2 · sessions 3–4 of 5'),ba:A('track','Progress tracking'),sa:A('track','Progress tracking')}},
   {w:6,range:'Dec 7 – 13',  theme:'Final ILT and tutoring',
-   a:{agentic:A('ilt','Session 5 of 5 + tutoring'),testcloud:A('ilt','Session 5 of 5 + tutoring'),ba:A('tutor','Tutoring session'),sa:A('tutor','Tutoring session')}},
-  {w:7,range:'Dec 14 – 20', theme:'Mock test and readiness check',
-   a:{agentic:A('mock','Score ≥ 85% by Dec 18'),testcloud:A('mock','Score ≥ 85% by Dec 18'),ba:A('track','Progress validation'),sa:A('track','Progress validation')}},
+   a:{agentic:A('ilt','ILT session 5 of 5 + 1 tutoring session'),testcloud:A('ilt','ILT session 5 of 5 + 1 tutoring session'),ba:A('tutor','Tutoring session'),sa:A('tutor','Tutoring session')}},
+  {w:7,range:'Dec 14 – 20', theme:'Mock test for all tracks',
+   a:{agentic:A('mock','Score ≥ 85% by Dec 18'),testcloud:A('mock','Score ≥ 85% by Dec 18'),ba:A('mock','Score ≥ 85% by Dec 18'),sa:A('mock','Score ≥ 85% by Dec 18')}},
   {w:8,range:'Dec 21 – 26', theme:'Certification exam window',
    a:{agentic:A('exam','Complete by Dec 26'),testcloud:A('exam','Complete by Dec 26'),ba:A('exam','Complete by Dec 26'),sa:A('exam','Complete by Dec 26')}},
 ];
@@ -459,7 +459,7 @@ function parseWorkbook(buf){
     const H = rows[hi].map(h=>String(h).trim().toLowerCase());
     const col = re => H.findIndex(h=>re.test(h));
     const cName=col(/employee\s*name|^name$/), cEmail=col(/e-?mail/), cRole=col(/^role/),
-          cMock=col(/mock/), cDate=col(/exam\s*date|cert.*date/), cCert=col(/^certification$|^certified$/);
+          cMock=col(/mock/), cDate=col(/exam\s*date|cert.*date/), cCert=col(/^certification( completed)?$|^certified$/);
     const cWeek = Array.from({length:8},(_,i)=>col(new RegExp('^w(ee)?k\\s*'+(i+1)+'$')));
     let n = 0;
     rows.slice(hi+1).forEach(r=>{
@@ -689,8 +689,8 @@ function renderCompletions(){
         <div class="pcell" style="min-width:0"><div class="bar"><i style="width:${e.weeks[REPORT_WEEK-1]}%"></i></div><b>${fmtPct(e.weeks[REPORT_WEEK-1])}</b></div></li>`).join('')}</ol>`
       : `<div class="none">No Week ${REPORT_WEEK} progress logged yet for the ${total} enrolled learners.</div>`}</div>`;
   }).join('');
-  const mocks = ENROLL.filter(e=>CERT[e.cert].track==='A' && e.mockScore!==null);
-  $('mockWrap').innerHTML = mocks.length ? `<div class="section-h"><h2>Mock test results</h2><span class="sub">Track A · pass mark 85% · due Dec 18</span></div>
+  const mocks = ENROLL.filter(e=>e.mockScore!==null);
+  $('mockWrap').innerHTML = mocks.length ? `<div class="section-h"><h2>Mock test results</h2><span class="sub">All tracks · pass mark 85% · due Dec 18</span></div>
     <div class="card"><div class="table-wrap"><table><thead><tr><th>Name</th><th>Certification</th><th>Score</th><th>Result</th></tr></thead><tbody>
     ${mocks.sort((a,b)=>b.mockScore-a.mockScore).map(e=>`<tr><td>${esc(e.p.name)}</td><td><span class="chip" style="--cc:${CERT[e.cert].color}"><span class="d"></span>${CERT[e.cert].short}</span></td>
       <td class="num">${e.mockScore}%</td><td><span class="status ${e.mockScore>=85?'st-ontrack':'st-behind'}">${e.mockScore>=85?'Ready for exam':'Below 85%'}</span></td></tr>`).join('')}
