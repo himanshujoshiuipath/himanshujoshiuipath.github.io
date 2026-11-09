@@ -242,7 +242,7 @@ tbody tr:last-child td{border-bottom:0}
       <div class="mark" aria-hidden="true"><i style="background:var(--c-agentic)"></i><i style="background:var(--c-testcloud)"></i><i style="background:var(--c-ba)"></i><i style="background:var(--c-sa)"></i></div>
       <div style="min-width:0">
         <h1>Learning Excellence Certification Program</h1>
-        <p>HCL Technologies · Nov 2 – Dec 26, 2026</p>
+        <p>HCL Technologies · Nov 2 – Dec 26, 2026 · <span id="srcLine">Data: loading…</span></p>
       </div>
     </div>
     <div class="actions">
@@ -266,8 +266,19 @@ tbody tr:last-child td{border-bottom:0}
 </header>
 
 <main>
+  <!-- LOADING / ERROR -->
+  <section class="wrap" id="loadState">
+    <div class="card empty">
+      <div class="medal" style="border-color:var(--accent);color:var(--accent)"><svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="m9 13 6 5M15 13l-6 5"/></svg></div>
+      <div id="loadMsg"><h3>Loading Participants Data.xlsx…</h3><p>Reading every certification sheet from the workbook.</p></div>
+    </div>
+    <label class="field" id="pickWrap" for="pickFile" hidden style="width:max-content;max-width:100%;cursor:pointer;height:auto;padding:10px 12px">
+      <span style="font-weight:600">Choose workbook</span><input id="pickFile" type="file" accept=".xlsx,.xls" style="width:auto">
+    </label>
+  </section>
+
   <!-- OVERVIEW -->
-  <section class="wrap" id="view-overview" role="tabpanel" aria-labelledby="tab-overview">
+  <section class="wrap" id="view-overview" role="tabpanel" aria-labelledby="tab-overview" hidden>
     <div class="kpis" id="kpis"></div>
     <div>
       <div class="section-h"><h2>Certification tracks</h2><span class="sub" id="certsSub"></span></div>
@@ -320,126 +331,24 @@ tbody tr:last-child td{border-bottom:0}
 </main>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   PARTICIPANT DATA — source: Participants Data.xlsx (one sheet per cert)
-   Shape per participant (cert-keyed where a learner holds several certs):
-   { name, email, role, certs:[...],
-     weeks:{certId:[W1..W8]}, mockScore:{certId:n|null},
-     certified:{certId:bool}, certDate:{certId:"Dec 23, 2026"} }
-   Plain arrays / booleans (spec shape) are also accepted and apply to every cert.
+   DATA SOURCE — the Excel workbook is the single source of truth.
+   Nothing about participants is stored in this file: on load the page
+   fetches DATA_FILE (next to index.html), parses every sheet in the
+   browser with SheetJS and builds all KPIs, tables and boards from it.
+
+   Workbook layout (one sheet per certification, sheet name decides cert):
+     sheet name contains "Agentic" → agentic | "Test Cloud" → testcloud
+                         "BA" / "Business Analyst" → ba | "Solution" → sa
+     header row (found automatically) with columns:
+     Employee Name | Email ID | Role | Week 1 … Week 8 | Mock Score (optional)
+     | Exam Date | Certification | Status
+     Week cells: 0–100, "85%", or Excel percent (0.85).
+     Certification: Yes / Passed / Certified / True marks the cert earned.
    ═══════════════════════════════════════════════════════════════ */
-const DEMO_PARTICIPANTS = [
-  {name:"Akash Mugundhan",email:"akash.mugundhan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Akash Singhal",email:"akash.singhal@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Amaladeepan S",email:"amaladeepan.s@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Arun Ashok",email:"arun.ashok@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Arvind Rana",email:"arvind.rana@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Balasubramanian subramanian",email:"balasubramanian.natarajan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Chandu Pilla",email:"chandubhargavi.pilla@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Dinesh Prasa",email:"dinesh.prasa@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Dinesh T",email:"dinesh.t@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"E Vijay Chandra Kanth",email:"evijay.chandrakanth@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ekta",email:"ekta@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ganesh Maddu",email:"ganesh.ganesh@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Gnanaprakash R",email:"gnanaprakash.r@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Gokulan Muralidharan",email:"gokulan.muralidharan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Hitesh Kumar",email:"hitesh.kumar@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Kalaivanan Mahadevan",email:"kalaivanan.mahadevan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Karra Anil Kumar",email:"anilkumar.karra@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Karthik Deshpande",email:"karthik.d@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Karthika Kathiresan",email:"karthika.kathiresan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Kavya K",email:"kavya.k@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Krupa Pulijala",email:"krupa.pulijala@uipath.com",role:"Senior Automation Developer",certs:['agentic'],weeks:{agentic:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Krupa Shah",email:"krupa.shah@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Maadesh Muruganantham",email:"maadesh.muruganantham@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Marigalla Keshava",email:"marigalla.keshava@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mayank Bhargav",email:"mayank.bhargav@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mitali Jain",email:"mitali.jain@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mohana Priya Chandran",email:"mohana.chandran@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mohd Ali",email:"mohd.muzafferali@uipath.com",role:"Automation Developer",certs:['agentic'],weeks:{agentic:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mounika Patnam",email:"mounika.patnam@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Naseem Fatima Akthar Banu",email:"naseem.akthar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Niraj Shegokar",email:"niraj.vasant@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Palani P",email:"palanikumar.p@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Prashanthi Salakalakonda",email:"prashanthi.salakalakonda@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rajani S",email:"rajani.s@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ranjith Srinivasan",email:"ranjith.srinivasan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sabareeswaran Natarajan",email:"sabareeswaran.natarajan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sachin Khandagale",email:"sachin.khandagale@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sachin S",email:"sachin.s@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Saheb Mukherjee",email:"saheb.mukherjee@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sai Kumar Mandha",email:"saikumar.mandha@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Saketh Revilla",email:"saketh.revilla@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Shriram Saljoshi",email:"shriram.saljoshi@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Shubham Chavan",email:"shubhamsudam.chavan@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Somisetty Kumar",email:"somisetty.kumar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sreekumar Uppara",email:"sreekumar.uppara@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sudeeksha Makhija",email:"sudeeksha.makhija@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Suraj Chauhan",email:"suraj.chauhan@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Thirumalai Venkatesh",email:"thirumalai.venkatesh@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Udhaya P",email:"udhaya.kumar@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Umamageswari Deivasigamani",email:"umamageswari.deivasigamani@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Vasanth S",email:"vasanth.s@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Vasantha R",email:"vasantha.r@uipath.com",role:"Senior Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Veeradivyesh Hariram",email:"veeradivyesh.hariram@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Vinayak Bagadi",email:"vinayak.bagadi@uipath.com",role:"Automation Developer",certs:['agentic','testcloud'],weeks:{agentic:[0,0,0,0,0,0,0,0],testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"K Veerapandiyan",email:"k.veerapandiyan@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mahaveer Sai",email:"mahaveer.sai@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Naveen Aakash Somasundaram Sabapathy",email:"naveen.somasundaram@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ragini Mysurappana Palya Lingadevaru",email:"ragini.mysurappana@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rohit Gupta",email:"rohit.gupta@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Vinay Awasthi",email:"vinay.awasthi@uipath.com",role:"Solution Architect",certs:['agentic','sa'],weeks:{agentic:[0,0,0,0,0,0,0,0],sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Aasish Alexander",email:"aasish.alexander@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Aditi Jain",email:"aditi.jain@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Dimpy Sharma",email:"dimpy.sharma@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Lisha Anbazhagan",email:"lisha.anbazhagan@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Musaveer Pasha",email:"musaveer.pasha@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Nune Lakshmi Gayathri",email:"nune.lakshmigayathri@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Pratixa Naiksatam",email:"pratixa.naiksatam@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rahul Ukey",email:"rahul.ukey@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sakaar Jain",email:"sakaar.jain@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Tanu Verma",email:"tanu.verma@uipath.com",role:"Business Analyst",certs:['ba'],weeks:{ba:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ajay Steevan Monteiro",email:"ajay.steevan@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Anand Karn",email:"anand.karn@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Arghodip Sarkar",email:"arghodip.sarkar@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ashish Tyagi",email:"ashish.tyagi@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ashish Yadav",email:"ashishkumar.yadav@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Ashok Masa",email:"masa.ashok@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Bhuvaneswari M",email:"bhuvaneswari.m@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Chaitali Shelke Shelke",email:"chaitalivikarm.shelke@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Geeta Kotur",email:"geeta.kotur@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Guruswamy Bhusarapu",email:"guruswamy.bhusarapu@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Inayathulla Obulam Palli",email:"inayathulla.obulampalli@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Jhansi V",email:"jhansi.v@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Kalki Kumar",email:"kalki.sureshkumar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Karthiga Nandakumar",email:"karthiga.nandakumar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Kavin S",email:"kavin.s@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Khizar Sharif",email:"khizar.sharif@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Koussighan AM",email:"koussighan.am@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Manisha Jayasekar",email:"manisha.jayasekar@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mohammed Imran",email:"mohammed.imran@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mulla Chesmi",email:"mulla.chesmi@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Muthu Raj",email:"muthu.raj@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Namburi Rajesh",email:"namburi.rajesh@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Naresh Manchala",email:"nareshkumar.manchala@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Nikhitha KV",email:"nikitha.kv@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rameshwar Mahajan",email:"rameshwar.mahajan@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sagar Das",email:"sagar.das@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Sai Pranav Sarma",email:"pranav.sarma@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Shahnawaz Anwar",email:"shahnawaz.anwar@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Shaik Javeed",email:"shaikwasim.javeed@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Shalu Mittal",email:"shalu.mittal@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Singoji Durga Bhavani",email:"durga.bhavani@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Souvik Chakraborty",email:"souvik.chakraborty@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Srinith Rajoli",email:"srinith.rajoli@uipath.com",role:"Senior Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Venkatesh Puli",email:"venkatesh.puli@uipath.com",role:"Automation Developer",certs:['testcloud'],weeks:{testcloud:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Mala Kanagaraj",email:"mala.kanagaraj@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Moideen Shahul Hameed A",email:"moideenshahul.hameed@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Pradeep Tomar",email:"pradeep.tomar@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rahul Polasani",email:"rahul.polasani@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}},
-  {name:"Rajat Gupta",email:"rajat.gupta@uipath.com",role:"Solution Architect",certs:['sa'],weeks:{sa:[0,0,0,0,0,0,0,0]},mockScore:{},certified:{},certDate:{}}
-];
+const DATA_FILE = 'Participants Data.xlsx';
 
 /* Optional: pin the program week (1–8). null = derive from today's date. */
 const CURRENT_WEEK_OVERRIDE = null;
@@ -514,7 +423,67 @@ function normalize(list){
   });
 }
 const clamp = n => Math.max(0, Math.min(100, Math.round(n)));
-const activeData = normalize(DEMO_PARTICIPANTS);
+
+/* ─── Excel → participant records ─── */
+function certForSheet(name){
+  const n = name.toLowerCase();
+  if (n.includes('agentic')) return 'agentic';
+  if (n.includes('test cloud') || n.includes('testcloud')) return 'testcloud';
+  if (n.includes('solution')) return 'sa';
+  if (/\bba\b/.test(n) || n.includes('business analyst')) return 'ba';
+  return null;
+}
+function toPct(s){
+  s = String(s ?? '').trim();
+  if (!s) return 0;
+  const isPct = s.includes('%');
+  const n = parseFloat(s.replace(/[%,\s]/g,''));
+  if (!isFinite(n)) return 0;
+  if (!isPct && n > 0 && n <= 1 && !Number.isInteger(n)) return clamp(n*100);
+  return clamp(n);
+}
+function tidyName(n){
+  n = String(n).replace(/\s*\.\s*$/,'').replace(/\s+/g,' ').trim();
+  if (n && n === n.toUpperCase()) n = n.toLowerCase().replace(/\b\w/g, c=>c.toUpperCase());
+  return n;
+}
+function parseWorkbook(buf){
+  const wb = XLSX.read(buf, {type:'array', cellDates:false});
+  const byEmail = new Map(), sheetsUsed = [];
+  wb.SheetNames.forEach(sn=>{
+    const cert = certForSheet(sn);
+    if (!cert) return;
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:false, defval:''});
+    const hi = rows.findIndex(r=>r.some(c=>/employee\s*name|^name$/i.test(String(c).trim())));
+    if (hi < 0) return;
+    const H = rows[hi].map(h=>String(h).trim().toLowerCase());
+    const col = re => H.findIndex(h=>re.test(h));
+    const cName=col(/employee\s*name|^name$/), cEmail=col(/e-?mail/), cRole=col(/^role/),
+          cMock=col(/mock/), cDate=col(/exam\s*date|cert.*date/), cCert=col(/^certification$|^certified$/);
+    const cWeek = Array.from({length:8},(_,i)=>col(new RegExp('^w(ee)?k\\s*'+(i+1)+'$')));
+    let n = 0;
+    rows.slice(hi+1).forEach(r=>{
+      const name = tidyName(r[cName] ?? '');
+      if (!name) return;
+      const email = String(cEmail>=0 ? r[cEmail] : '').trim().toLowerCase();
+      const key = email || name.toLowerCase();
+      let p = byEmail.get(key);
+      if (!p){ p = {name, email, role:String(cRole>=0?r[cRole]:'').trim(), certs:[], weeks:{}, mockScore:{}, certified:{}, certDate:{}}; byEmail.set(key,p); }
+      if (p.certs.includes(cert)) return;
+      p.certs.push(cert);
+      p.weeks[cert] = cWeek.map(ci=>ci>=0 ? toPct(r[ci]) : 0);
+      const ms = cMock>=0 ? String(r[cMock]).trim() : '';
+      p.mockScore[cert] = ms ? toPct(ms) : null;
+      p.certified[cert] = cCert>=0 && /^(y|yes|pass|passed|certified|true|done|completed?)$/i.test(String(r[cCert]).trim());
+      p.certDate[cert] = p.certified[cert] && cDate>=0 ? String(r[cDate]).trim() : '';
+      n++;
+    });
+    sheetsUsed.push(`${sn} (${n})`);
+  });
+  return {list:[...byEmail.values()], sheetsUsed};
+}
+
+let activeData = [], ENROLL = [], REPORT_WEEK = 1, LOADED = false, SOURCE_NOTE = '';
 
 /* ─── Derived program state ─── */
 function weekOf(d){
@@ -527,12 +496,14 @@ const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 const CURRENT_WEEK = weekOf(TODAY);
 const CW = Math.max(1, Math.min(8, CURRENT_WEEK));
 
-const ENROLL = [];
-activeData.forEach(p=>p.certs.forEach(c=>ENROLL.push({p, cert:c, ...p.by[c]})));
-
-// Reporting week: the latest week that has any progress logged; otherwise the last completed week.
-const latestDataWeek = ENROLL.reduce((m,e)=>{e.weeks.forEach((v,i)=>{ if(v>0 && i+1>m) m=i+1; }); return m;},0);
-const REPORT_WEEK = latestDataWeek || Math.max(1, Math.min(8, CURRENT_WEEK-1));
+function setData(list){
+  activeData = normalize(list);
+  ENROLL = [];
+  activeData.forEach(p=>p.certs.forEach(c=>ENROLL.push({p, cert:c, ...p.by[c]})));
+  // Reporting week: the latest week that has any progress logged; otherwise the last completed week.
+  const latestDataWeek = ENROLL.reduce((m,e)=>{e.weeks.forEach((v,i)=>{ if(v>0 && i+1>m) m=i+1; }); return m;},0);
+  REPORT_WEEK = latestDataWeek || Math.max(1, Math.min(8, CURRENT_WEEK-1));
+}
 
 const overall = e => e.weeks.reduce((a,b)=>a+b,0)/8;
 function statusOf(val, certified){
@@ -625,7 +596,7 @@ function renderSchedule(){
 }
 
 /* ─── PARTICIPANTS ─── */
-const ui = {q:'', cert:'all', week:REPORT_WEEK, sort:{key:'name', dir:1}};
+const ui = {q:'', cert:'all', week:1, sort:{key:'name', dir:1}};
 function rowsFor(){
   return activeData.filter(p=>ui.cert==='all' || p.certs.includes(ui.cert)).map(p=>{
     const certs = ui.cert==='all' ? p.certs : [ui.cert];
@@ -674,10 +645,14 @@ function renderParticipants(){
   $('tCount').innerHTML = `Showing <span class="num">${rows.length}</span> of <span class="num">${ui.cert==='all'?activeData.length:activeData.filter(p=>p.certs.includes(ui.cert)).length}</span> participants`;
   $('tNote').textContent = ui.cert==='all' ? 'Learners in several tracks show the average across their tracks' : `Values for ${CERT[ui.cert].name}`;
 }
+let participantsWired = false;
 function setupParticipants(){
+  ui.week = REPORT_WEEK;
   $('certFilter').innerHTML = [{id:'all',short:'All',color:'var(--accent)'},...CERTS].map(c=>
     `<button type="button" data-cert="${c.id}" aria-pressed="${ui.cert===c.id}" style="--cc:${c.color}">${c.id!=='all'?'<span class="d"></span>':''}${c.short} <span class="num" style="color:var(--muted)">${c.id==='all'?activeData.length:ENROLL.filter(e=>e.cert===c.id).length}</span></button>`).join('');
   $('weekSel').innerHTML = SCHEDULE.map(s=>`<option value="${s.w}" ${s.w===ui.week?'selected':''}>Week ${s.w}${s.w===CURRENT_WEEK?' (current)':''}</option>`).join('');
+  if (participantsWired) return;
+  participantsWired = true;
   $('certFilter').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.cert=b.dataset.cert;
     $('certFilter').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));renderParticipants();});
   $('q').addEventListener('input',e=>{ui.q=e.target.value;renderParticipants();});
@@ -725,10 +700,11 @@ function renderCompletions(){
 /* ─── Header, tabs, theme ─── */
 function renderHeader(){
   $('wkBadgeTxt').textContent = CURRENT_WEEK===0 ? 'Starts Nov 2' : CURRENT_WEEK>8 ? 'Program complete' : `Week ${CURRENT_WEEK} of 8 · ${SCHEDULE[CURRENT_WEEK-1].range}`;
-  $('cntP').textContent = activeData.length;
+  $('cntP').textContent = LOADED ? activeData.length : '';
 }
 const TABS = ['overview','schedule','participants','completions'];
 function showTab(t){
+  if (!LOADED) return;
   if (!TABS.includes(t)) t='overview';
   TABS.forEach(x=>{ $('view-'+x).hidden = x!==t; $('tab-'+x).setAttribute('aria-selected', x===t); });
 }
@@ -817,6 +793,7 @@ function buildWorkbook(){
   return zip(files);
 }
 $('exportBtn').addEventListener('click', async ()=>{
+  if (!LOADED){ toast('Load the participant workbook first.'); return; }
   const blob = buildWorkbook();
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   const filename = `HCL_Learning_Excellence_Progress_${stamp}.xlsx`;
@@ -831,9 +808,42 @@ $('exportBtn').addEventListener('click', async ()=>{
   setTimeout(()=>URL.revokeObjectURL(a.href),4000); toast('Workbook downloaded');
 });
 
-/* ─── Boot ─── */
-renderHeader(); renderOverview(); renderSchedule(); setupParticipants(); renderParticipants(); renderCompletions(); paintThemeIcon();
-showTab(location.hash.slice(1));
+/* ─── Boot: load the workbook, then render ─── */
+function renderAll(buf, label){
+  const {list, sheetsUsed} = parseWorkbook(buf);
+  if (!list.length) throw new Error('No participant rows found. Check that each sheet has an "Employee Name" header row.');
+  setData(list);
+  LOADED = true;
+  SOURCE_NOTE = `${label} · ${sheetsUsed.join(', ')}`;
+  $('srcLine').textContent = `Data: ${label}`;
+  $('srcLine').title = SOURCE_NOTE;
+  $('loadState').hidden = true;
+  renderHeader(); renderOverview(); renderSchedule(); setupParticipants(); renderParticipants(); renderCompletions();
+  showTab(location.hash.slice(1));
+}
+function showLoadError(msg){
+  $('loadMsg').innerHTML = `<h3>Couldn't load ${esc(DATA_FILE)}</h3><p>${esc(msg)}</p>
+    <p class="note">The dashboard reads the workbook stored next to index.html. Opening index.html straight from disk blocks that, so serve the folder (GitHub Pages, or <span class="mono">npx serve</span>) or pick the workbook below.</p>`;
+  $('pickWrap').hidden = false;
+}
+$('pickFile').addEventListener('change', async e=>{
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  try { renderAll(new Uint8Array(await f.arrayBuffer()), f.name); }
+  catch(err){ showLoadError(err.message || String(err)); }
+});
+async function boot(){
+  paintThemeIcon();
+  renderHeader();
+  if (typeof XLSX === 'undefined'){ showLoadError('The Excel reader (SheetJS) did not load. Check your network connection and reload.'); return; }
+  try {
+    const res = await fetch(encodeURI(DATA_FILE) + '?v=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error(`The server answered ${res.status} for "${DATA_FILE}". Make sure the file is in the same folder as index.html.`);
+    renderAll(new Uint8Array(await res.arrayBuffer()), DATA_FILE);
+  } catch(err){
+    showLoadError(err instanceof TypeError ? 'The browser could not fetch the file.' : (err.message || String(err)));
+  }
+}
+boot();
 </script>
 
 </body>
