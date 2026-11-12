@@ -253,6 +253,84 @@ tbody tr:last-child td{border-bottom:0}
   .btn .lbl{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ─── PROGRAM tab (scoped to #view-program) ─── */
+#view-program{--c-ttt:var(--s-cert);--ink-ttt:var(--s-cert-ink)}
+#view-program .pg{display:grid;gap:18px}
+#view-program h2,#view-program h3,#view-program p{margin:0}
+#view-program h2,#view-program h3{text-wrap:balance;line-height:1.15}
+#view-program h2{font-size:1.3rem;font-weight:800;letter-spacing:-.01em}
+#view-program h3{font-size:.98rem;font-weight:700}
+#view-program .pg-eyebrow{font-family:var(--font-data);font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:500}
+#view-program .card{min-width:0}
+#view-program .pg-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:28px;align-items:center;padding-block:6px}
+#view-program .pg-hero .pg-title{font-size:clamp(1.6rem,3vw,2.1rem);font-weight:800;letter-spacing:-.02em;margin-top:6px}
+#view-program .pg-hero .pg-sub{font-size:1.1rem;font-weight:600;color:var(--accent);margin-top:6px}
+#view-program .pg-hero .pg-lede{color:var(--fg-2);margin-top:10px;max-width:66ch;font-size:.93rem}
+#view-program .pg-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+#view-program .pg-chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:.8rem;font-weight:600;color:var(--fg-2)}
+#view-program .pg-chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+#view-program .pg-facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#view-program .pg-fact{padding:14px 16px}
+#view-program .pg-fact b{display:block;font-family:var(--font-data);font-weight:500;font-size:1.5rem;line-height:1.1}
+#view-program .pg-fact span{display:block;color:var(--muted);font-size:.82rem;margin-top:4px}
+@media (max-width:880px){#view-program .pg-hero{grid-template-columns:1fr}}
+#view-program .pg-plan{padding:18px 20px;display:grid;gap:12px}
+#view-program .pg-sec-head p{color:var(--fg-2);font-size:.9rem;max-width:110ch;margin-top:4px}
+#view-program .pg-scroller{overflow-x:auto}
+#view-program .pg-lanes{display:grid;gap:5px;min-width:780px}
+#view-program .pg-lane{display:grid;grid-template-columns:124px repeat(10,minmax(64px,1fr));gap:5px;align-items:stretch}
+#view-program .pg-wk{font-family:var(--font-data);font-size:.68rem;color:var(--muted);text-align:center;padding-bottom:2px}
+#view-program .pg-lane-lab{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:center;line-height:1.2}
+#view-program .pg-lane-lab b{font-size:.86rem}
+#view-program .pg-lane-lab span{font-family:var(--font-data);font-size:.68rem;color:var(--muted)}
+#view-program .pg-bar{grid-row:1;background:color-mix(in srgb,var(--c) 17%,var(--surface));color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 40%,var(--surface));border-radius:6px;font-size:.74rem;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-program .pg-bar.key{background:color-mix(in srgb,var(--c) 30%,var(--surface))}
+#view-program .pg-bar.buf{background:transparent;border-style:dashed;color:var(--muted);font-weight:500}
+#view-program .pg-a{--c:var(--c-agentic);--ink:var(--ink-agentic)}
+#view-program .pg-t{--c:var(--c-testcloud);--ink:var(--ink-testcloud)}
+#view-program .pg-r{--c:var(--c-ttt);--ink:var(--ink-ttt)}
+#view-program .pg-note{font-size:.78rem;color:var(--muted)}
+#view-program .pg-feats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#view-program .pg-feat,#view-program .pg-out{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:grid;gap:4px;align-content:start;min-width:0}
+#view-program .pg-feat .k{font-family:var(--font-data);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+#view-program .pg-feat p{color:var(--fg-2);font-size:.86rem}
+#view-program .pg-feat strong{color:var(--fg);font-weight:600}
+@media (max-width:860px){#view-program .pg-feats{grid-template-columns:1fr}}
+#view-program .pg-duo{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
+#view-program .pg-panel{padding:18px 20px;display:grid;gap:12px;align-content:start}
+#view-program .pg-intro{color:var(--fg-2);font-size:.9rem}
+#view-program .pg-steps{list-style:none;margin:0;padding:0;display:grid;counter-reset:s}
+#view-program .pg-steps li{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:6px 0;border-top:1px solid var(--line);counter-increment:s}
+#view-program .pg-steps li:first-child{border-top:0;padding-top:0}
+#view-program .pg-steps li::before{content:counter(s);font-family:var(--font-data);font-size:.75rem;font-weight:500;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+#view-program .pg-steps b{font-size:.88rem;font-weight:700}
+#view-program .pg-steps span{color:var(--fg-2);font-size:.83rem}
+#view-program .pg-steps b + span::before{content:" · ";color:var(--muted)}
+#view-program .pg-cert-line{background:var(--accent-soft);border-radius:6px;padding:8px 12px;font-size:.82rem;font-weight:600;color:var(--fg)}
+#view-program .pg-scope{display:grid;gap:8px}
+#view-program .pg-scope-row{display:grid;grid-template-columns:74px 1fr;gap:10px;font-size:.84rem;color:var(--fg-2)}
+#view-program .pg-scope-row b{font-family:var(--font-data);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);font-weight:500;padding-top:2px}
+#view-program .pg-tbl{overflow-x:auto}
+#view-program .pg-tbl table{width:100%;border-collapse:collapse;font-size:.85rem;min-width:560px}
+#view-program .pg-tbl th{text-align:left;font-family:var(--font-data);font-size:.68rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line-strong);background:none;position:static}
+#view-program .pg-tbl td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+#view-program .pg-tbl tr.grp td{padding:10px 10px 4px}
+#view-program .pg-tbl tr.grp span{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 18%,var(--surface));color:var(--ink);border:1px solid color-mix(in srgb,var(--c) 40%,var(--surface))}
+#view-program .pg-tbl td.nm{font-weight:600;white-space:nowrap}
+#view-program .pg-tbl td.em{font-family:var(--font-data);font-size:.73rem;color:var(--fg-2);white-space:nowrap}
+#view-program .pg-tbl tbody tr:last-child td{border-bottom:0}
+@media (max-width:960px){#view-program .pg-duo{grid-template-columns:1fr}}
+#view-program .pg-exp{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;border-bottom:1px solid var(--line);padding-bottom:12px}
+#view-program .pg-exp > div{display:grid;grid-template-columns:6px 1fr;gap:12px}
+#view-program .pg-exp > div::before{content:"";border-radius:3px;background:var(--c)}
+#view-program .pg-exp b{display:block;font-size:.9rem}
+#view-program .pg-exp p{color:var(--fg-2);font-size:.85rem}
+#view-program .pg-outs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+#view-program .pg-out p{color:var(--fg-2);font-size:.83rem}
+@media (max-width:1000px){#view-program .pg-outs{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){#view-program .pg-outs,#view-program .pg-exp{grid-template-columns:1fr}}
+#view-program .pg-foot{border-top:1px solid var(--line);padding-top:14px;color:var(--muted);font-size:.8rem;display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 24px}
 </style>
 </head>
 <body>
@@ -286,6 +364,7 @@ tbody tr:last-child td{border-bottom:0}
       <button class="tab" role="tab" id="tab-participants" data-tab="participants" aria-selected="false">Participants<span class="count" id="cntP"></span></button>
       <button class="tab" role="tab" id="tab-completions" data-tab="completions" aria-selected="false">Completions<span class="count" id="cntC"></span></button>
       <button class="tab" role="tab" id="tab-mentors" data-tab="mentors" aria-selected="false">Mentor Sessions<span class="count" id="cntM"></span></button>
+      <button class="tab" role="tab" id="tab-program" data-tab="program" aria-selected="false">Program</button>
     </nav>
   </div>
 </header>
@@ -391,6 +470,146 @@ tbody tr:last-child td{border-bottom:0}
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- PROGRAM -->
+  <section class="wrap" id="view-program" role="tabpanel" aria-labelledby="tab-program" hidden>
+   <div class="pg">
+    <section class="pg-hero" aria-label="Programme overview">
+      <div>
+        <div class="pg-eyebrow">Partner Success · HCL Technologies</div>
+        <h2 class="pg-title">UiPath – HCL Enablement Program</h2>
+        <p class="pg-sub">Certification and Product Expertise</p>
+        <p class="pg-lede">We are enabling HCL employees deployed to UiPath Professional Services, and the wider HCL organisation, to certify and build product expertise. A Train the Trainer program runs in parallel so HCL can carry the skills forward on its own.</p>
+        <div class="pg-chips">
+          <span class="pg-chip" style="--c:var(--c-agentic)">Agentic Professional</span>
+          <span class="pg-chip" style="--c:var(--c-agentic)">Document Understanding + IXP</span>
+          <span class="pg-chip" style="--c:var(--c-testcloud)">Agentic Testing</span>
+          <span class="pg-chip" style="--c:var(--c-sa)">Solution Architects</span>
+          <span class="pg-chip" style="--c:var(--c-ba)">Business Analysts</span>
+        </div>
+      </div>
+      <div class="pg-facts">
+        <div class="card pg-fact"><b>8–10</b><span>weeks from kick-off to certification</span></div>
+        <div class="card pg-fact"><b>3</b><span>dedicated product-expert mentors</span></div>
+        <div class="card pg-fact"><b>3</b><span>parallel tracks: Agentic, Testing, TTT</span></div>
+        <div class="card pg-fact"><b>5</b><span>learner groups, SAs and BAs included</span></div>
+      </div>
+    </section>
+
+    <section class="card pg-plan" aria-labelledby="pg-plan-h">
+      <div class="pg-sec-head">
+        <div class="pg-eyebrow">Execution plan</div>
+        <h2 id="pg-plan-h">An 8 to 10 week plan, run in parallel tracks</h2>
+        <p>Agentic, Testing and TTT run side by side. Three mentors build expertise and level up product skills for Agentic Professional, Document Understanding + IXP, Agentic Testing, Solution Architects and Business Analysts.</p>
+      </div>
+      <div class="pg-scroller">
+        <div class="pg-lanes" role="img" aria-label="Indicative week-by-week plan for the Agentic, Testing and TTT tracks over ten weeks">
+          <div class="pg-lane"><span></span>
+            <div class="pg-wk" style="grid-column:2;grid-row:1">W1</div><div class="pg-wk" style="grid-column:3;grid-row:1">W2</div><div class="pg-wk" style="grid-column:4;grid-row:1">W3</div><div class="pg-wk" style="grid-column:5;grid-row:1">W4</div><div class="pg-wk" style="grid-column:6;grid-row:1">W5</div><div class="pg-wk" style="grid-column:7;grid-row:1">W6</div><div class="pg-wk" style="grid-column:8;grid-row:1">W7</div><div class="pg-wk" style="grid-column:9;grid-row:1">W8</div><div class="pg-wk" style="grid-column:10;grid-row:1">W9</div><div class="pg-wk" style="grid-column:11;grid-row:1">W10</div>
+          </div>
+          <div class="pg-lane"><div class="pg-lane-lab"><b>Agentic</b><span>AAP · DU + IXP</span></div>
+            <div class="pg-bar pg-a" style="grid-column:2">Self-study</div>
+            <div class="pg-bar pg-a" style="grid-column:3 / span 2">Office hours</div>
+            <div class="pg-bar pg-a" style="grid-column:5 / span 3">Mentor sessions + tutoring</div>
+            <div class="pg-bar pg-a key" style="grid-column:8">Mock test</div>
+            <div class="pg-bar pg-a key" style="grid-column:9">Exam</div>
+            <div class="pg-bar pg-a buf" style="grid-column:10 / span 2">Retake buffer</div>
+          </div>
+          <div class="pg-lane"><div class="pg-lane-lab"><b>Testing</b><span>TCAP</span></div>
+            <div class="pg-bar pg-t" style="grid-column:2">Self-study</div>
+            <div class="pg-bar pg-t" style="grid-column:3 / span 2">Office hours</div>
+            <div class="pg-bar pg-t" style="grid-column:5 / span 3">Mentor sessions + tutoring</div>
+            <div class="pg-bar pg-t key" style="grid-column:8">Mock test</div>
+            <div class="pg-bar pg-t key" style="grid-column:9">Exam</div>
+            <div class="pg-bar pg-t buf" style="grid-column:10 / span 2">Retake buffer</div>
+          </div>
+          <div class="pg-lane"><div class="pg-lane-lab"><b>TTT</b><span>Trainers</span></div>
+            <div class="pg-bar pg-r" style="grid-column:2 / span 2">Identify trainers</div>
+            <div class="pg-bar pg-r" style="grid-column:4 / span 3">Attend TTT · mentor sessions</div>
+            <div class="pg-bar pg-r key" style="grid-column:7 / span 2">Technical assessment</div>
+            <div class="pg-bar pg-r" style="grid-column:9 / span 3">Deliver ILTs · UiPath shadows</div>
+          </div>
+        </div>
+      </div>
+      <p class="pg-note">Indicative timing. The tracker holds the live schedule. SAs and BAs follow the self-paced path with tutoring, then the same mock test and exam.</p>
+      <div class="pg-feats">
+        <div class="pg-feat"><span class="k">Mentors</span><h3>3 dedicated mentors</h3><p>Mentor sessions level up product skills: <strong>Meera Kannan, Ganesh Babu, Rajkumar MP.</strong></p></div>
+        <div class="pg-feat"><span class="k">Assessments</span><h3>Technical assessments for TTT</h3><p>Interview, teach-back and a technical assessment for each trainer before they teach.</p></div>
+        <div class="pg-feat"><span class="k">Tutoring</span><h3>Certification tutoring</h3><p>Tutoring sessions help participants prepare for the mock test and the certification exam.</p></div>
+      </div>
+    </section>
+
+    <div class="pg-duo">
+      <section class="card pg-panel" aria-labelledby="pg-ttt-h">
+        <div>
+          <div class="pg-eyebrow">TTT · Scope</div>
+          <h2 id="pg-ttt-h">Train the Trainer Program</h2>
+          <p class="pg-intro" style="margin-top:4px">UiPath trains HCL, HCL expands skills internally, and UiPath supports accreditation, shadows and monitors.</p>
+        </div>
+        <ol class="pg-steps">
+          <li><div><b>Nominate and train</b><span>Self-study plus hands-on use cases.</span></div></li>
+          <li><div><b>Identify trainers</b><span>Pick top candidates as prime trainers.</span></div></li>
+          <li><div><b>Attend TTT</b><span>Master trainers cover latest product and labs.</span></div></li>
+          <li><div><b>Assessment</b><span>Interview and teach-back per trainer.</span></div></li>
+          <li><div><b>Deliver ILTs</b><span>HCL teaches; UiPath shadows 1–2 sessions.</span></div></li>
+        </ol>
+        <p class="pg-cert-line">Certification runs alongside steps 2 to 5: AAP / TCAP. Each trainer is certified before teaching solo.</p>
+        <div class="pg-scope">
+          <div class="pg-scope-row"><b>People</b><span>HCL nominates 10 to 15 trainer candidates and 5 are selected: 3 Agentic Automation (2 specialised in IXP) and 2 Agentic Testing.</span></div>
+          <div class="pg-scope-row"><b>Ownership</b><span>The HCL Engagement Lead drives the framework, with a recurring cadence with the UiPath Engagement Lead and master trainers, who get full access to UiPath systems and environments.</span></div>
+        </div>
+      </section>
+
+      <section class="card pg-panel" aria-labelledby="pg-people-h">
+        <div>
+          <div class="pg-eyebrow">Stakeholders</div>
+          <h2 id="pg-people-h">Who is involved</h2>
+        </div>
+        <div class="pg-tbl">
+          <table>
+            <thead><tr><th>Name</th><th>Designation</th><th>Email</th></tr></thead>
+            <tbody>
+              <tr class="grp"><td colspan="3"><span style="--c:var(--c-agentic);--ink:var(--ink-agentic)">UiPath</span></td></tr>
+              <tr><td class="nm">Anjan Gogoi</td><td>Sr. Director, Partner Success</td><td class="em">anjan.gogoi@uipath.com</td></tr>
+              <tr><td class="nm">Mukund Rao</td><td>Sr. CSM</td><td class="em">mukund.rao@uipath.com</td></tr>
+              <tr><td class="nm">Mounika Tanguturi</td><td>Sr. Manager, Partner Success</td><td class="em">mounika.tanguturi@uipath.com</td></tr>
+              <tr><td class="nm">Himanshu Joshi</td><td>Sr. Solution Architect</td><td class="em">himanshu.joshi@uipath.com</td></tr>
+              <tr class="grp"><td colspan="3"><span style="--c:var(--c-ba);--ink:var(--ink-ba)">HCL</span></td></tr>
+              <tr><td class="nm">Rajib Biswas</td><td>Program Manager</td><td class="em">rajib.biswas@uipath.com</td></tr>
+              <tr class="grp"><td colspan="3"><span style="--c:var(--c-sa);--ink:var(--ink-sa)">Mentor Team</span></td></tr>
+              <tr><td class="nm">Meera Kannan</td><td>Product Expert</td><td class="em">meera.kannan@uipath.com</td></tr>
+              <tr><td class="nm">Ganesh Babu</td><td>Product Expert</td><td class="em">ganesh.kuncha@uipath.com</td></tr>
+              <tr><td class="nm">Rajkumar MP</td><td>Product Expert</td><td class="em">rajkumar.mp@uipath.com</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <section class="card pg-panel" aria-labelledby="pg-out-h">
+      <div>
+        <div class="pg-eyebrow">Expectations and outcomes</div>
+        <h2 id="pg-out-h">What we expect, and what the program delivers</h2>
+      </div>
+      <div class="pg-exp">
+        <div style="--c:var(--c-agentic)"><span><b>Certified</b><p>The UiPath team helps enable the HCL team for certifications.</p></span></div>
+        <div style="--c:var(--c-testcloud)"><span><b>Highly skilled</b><p>HCL teams build deep product expertise they can apply on projects.</p></span></div>
+        <div style="--c:var(--c-sa)"><span><b>Self-sufficient</b><p>Trainers are trained and ready to deliver their own sessions.</p></span></div>
+      </div>
+      <div class="pg-outs">
+        <div class="pg-out"><h3>A certified HCL bench</h3><p>HCL employees on UiPath PS engagements and across the wider organisation earn Agentic Professional and Test Cloud Architect certifications, with Document Understanding and IXP depth. SAs and BAs are included.</p></div>
+        <div class="pg-out"><h3>Product expertise in practice</h3><p>Mentor sessions, hands-on use cases and technical assessments take people from course knowledge to the skill to deliver, with tutoring before each mock test and exam.</p></div>
+        <div class="pg-out"><h3>Trainers HCL can rely on</h3><p>Five prime trainers, chosen from 10 to 15 candidates, are certified before they teach solo. UiPath shadows their first one or two sessions, then HCL runs sessions itself.</p></div>
+        <div class="pg-out"><h3>A program that sustains itself</h3><p>The HCL Engagement Lead drives the framework alongside UiPath. Skills keep spreading across HCL without UiPath leading every session, and the tracker shows progress as it happens.</p></div>
+      </div>
+    </section>
+
+    <div class="pg-foot">
+      <span>UiPath Partner Success · HCL Enablement Program</span>
+      <span>Live schedule and progress: himanshujoshiuipath.github.io</span>
+    </div>
+   </div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
@@ -780,7 +999,7 @@ function renderHeader(){
   $('wkBadgeTxt').textContent = CURRENT_WEEK===0 ? 'Starts Nov 2' : CURRENT_WEEK>8 ? 'Program complete' : `Week ${CURRENT_WEEK} of 8 · ${SCHEDULE[CURRENT_WEEK-1].range}`;
   $('cntP').textContent = LOADED ? activeData.length : '';
 }
-const TABS = ['overview','schedule','participants','completions','mentors'];
+const TABS = ['overview','schedule','participants','completions','mentors','program'];
 function showTab(t){
   if (!LOADED) return;
   if (!TABS.includes(t)) t='overview';
