@@ -211,6 +211,26 @@ tbody tr:last-child td{border-bottom:0}
 .board li .rk{font-family:var(--font-data);color:var(--muted);font-size:12px}
 .board li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .board .none{color:var(--muted);font-size:12.5px;margin-top:10px;padding:12px;border:1px dashed var(--line-strong);border-radius:8px}
+
+/* Mentor Sessions */
+.kpi .bar{margin-top:4px}
+.ms-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ms-types{display:grid;gap:6px;font-size:12px;color:var(--fg-2)}
+.ms-types div{display:flex;justify-content:space-between;gap:8px}
+.ms-types b{font-family:var(--font-data);font-variant-numeric:tabular-nums;color:var(--fg);font-weight:600}
+.mentors{padding:6px 16px}
+.mentor{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,2fr) auto;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.mentor:last-child{border-bottom:0}
+.mentor .av{background:var(--accent-soft);color:var(--fg);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.mentor .figs{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--fg-2);text-align:right;white-space:nowrap}
+.mentor .figs b{color:var(--fg);font-weight:600}
+.ms-date{display:grid;line-height:1.25}
+.ms-date b{font-family:var(--font-data);font-variant-numeric:tabular-nums;font-weight:500;font-size:13px}
+.ms-date span{font-size:11px;color:var(--muted)}
+.tag-past{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--s-behind-ink);margin-left:6px}
+.next-row td{background:var(--accent-soft)}
+@media (max-width:980px){.ms-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.ms-cards{grid-template-columns:1fr}.mentor{grid-template-columns:1fr}.mentor .figs{text-align:left}}
 .wall{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .badge-card{padding:14px;display:flex;gap:12px;align-items:center;border-color:color-mix(in srgb,var(--s-cert) 40%,var(--line))}
 .badge-card .seal{width:40px;height:40px;border-radius:50%;background:var(--cc);display:grid;place-items:center;color:var(--on-color);flex:none;box-shadow:0 0 0 3px var(--surface),0 0 0 5px var(--s-cert)}
@@ -261,6 +281,7 @@ tbody tr:last-child td{border-bottom:0}
       <button class="tab" role="tab" id="tab-schedule" data-tab="schedule" aria-selected="false">Weekly Schedule</button>
       <button class="tab" role="tab" id="tab-participants" data-tab="participants" aria-selected="false">Participants<span class="count" id="cntP"></span></button>
       <button class="tab" role="tab" id="tab-completions" data-tab="completions" aria-selected="false">Completions<span class="count" id="cntC"></span></button>
+      <button class="tab" role="tab" id="tab-mentors" data-tab="mentors" aria-selected="false">Mentor Sessions<span class="count" id="cntM"></span></button>
     </nav>
   </div>
 </header>
@@ -327,6 +348,45 @@ tbody tr:last-child td{border-bottom:0}
       <div class="boards" id="boards"></div>
     </div>
     <div id="mockWrap"></div>
+  </section>
+
+  <!-- MENTOR SESSIONS -->
+  <section class="wrap" id="view-mentors" role="tabpanel" aria-labelledby="tab-mentors" hidden>
+    <div id="msLoad" class="card empty">
+      <div class="medal" style="border-color:var(--accent);color:var(--accent)"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18"/></svg></div>
+      <div id="msLoadMsg"><h3>Loading Mentor Sessions.xlsx…</h3><p>Reading the session plan and delivery status.</p></div>
+    </div>
+    <label class="field" id="msPickWrap" for="msPick" hidden style="width:max-content;max-width:100%;cursor:pointer;height:auto;padding:10px 12px">
+      <span style="font-weight:600">Choose Mentor Sessions workbook</span><input id="msPick" type="file" accept=".xlsx,.xls" style="width:auto">
+    </label>
+    <div id="msBody" hidden style="display:grid;gap:28px">
+      <div class="kpis" id="msKpis"></div>
+      <div>
+        <div class="section-h"><h2>Delivery by certification</h2><span class="sub">Progress = sessions marked Completed in the workbook</span></div>
+        <div class="ms-cards" id="msCards"></div>
+      </div>
+      <div>
+        <div class="section-h"><h2>Mentors</h2><span class="sub">Hours delivered against hours planned</span></div>
+        <div class="card mentors" id="msMentors"></div>
+      </div>
+      <div>
+        <div class="section-h"><h2>Session plan</h2><span class="sub" id="msSub"></span></div>
+        <div class="toolbar">
+          <label class="field search" for="msQ"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="msQ" type="search" placeholder="Search mentor, batch or session" autocomplete="off"></label>
+          <div class="seg" id="msCert" role="group" aria-label="Filter by certification"></div>
+          <div class="seg" id="msStatus" role="group" aria-label="Filter by status"></div>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr id="msHead"></tr></thead>
+              <tbody id="msRows"></tbody>
+            </table>
+          </div>
+          <div class="tfoot"><span id="msCount"></span><span>Change a session's Status in Mentor Sessions.xlsx and refresh to update</span></div>
+        </div>
+      </div>
+    </div>
   </section>
 </main>
 <div class="toast" id="toast" hidden></div>
@@ -716,7 +776,7 @@ function renderHeader(){
   $('wkBadgeTxt').textContent = CURRENT_WEEK===0 ? 'Starts Nov 2' : CURRENT_WEEK>8 ? 'Program complete' : `Week ${CURRENT_WEEK} of 8 · ${SCHEDULE[CURRENT_WEEK-1].range}`;
   $('cntP').textContent = LOADED ? activeData.length : '';
 }
-const TABS = ['overview','schedule','participants','completions'];
+const TABS = ['overview','schedule','participants','completions','mentors'];
 function showTab(t){
   if (!LOADED) return;
   if (!TABS.includes(t)) t='overview';
@@ -858,6 +918,205 @@ async function boot(){
   }
 }
 boot();
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MENTOR SESSIONS — source of truth: Mentor Sessions.xlsx (first sheet
+   with a "Type of Session" header). Columns matched by header text:
+   Product | Batch | Type of Session | Session Date | Number of Participants
+   | Mentor | Number of hours | Status ("Completed" / "Yet To Start").
+   Totals (sessions / hours delivered) are computed here from Status;
+   the summary block at the bottom of the sheet is ignored.
+   ═══════════════════════════════════════════════════════════════ */
+const MENTOR_FILE = 'Mentor Sessions.xlsx';
+let MS = [];
+const msUI = {q:'', cert:'all', status:'all', sort:{key:'date', dir:1}};
+
+function msCert(product){
+  const p = String(product).toLowerCase();
+  if (p.includes('agentic')) return 'agentic';
+  if (p.includes('test cloud') || p.includes('testcloud')) return 'testcloud';
+  if (p.includes('business analyst') || /\bba\b/.test(p)) return 'ba';
+  if (p.includes('solution architect') || /\bsa\b/.test(p)) return 'sa';
+  return null;
+}
+function msDate(v){
+  if (typeof v === 'number' && isFinite(v)){ const d = XLSX.SSF.parse_date_code(v); return d ? new Date(d.y, d.m-1, d.d) : null; }
+  const s = String(v ?? '').trim(); if (!s) return null;
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (m){ const y = +m[3] < 100 ? 2000 + +m[3] : +m[3]; return new Date(y, +m[1]-1, +m[2]); }
+  const d = new Date(s); return isNaN(d) ? null : d;
+}
+function msKind(t){
+  if (/office/i.test(t)) return 'Office Hours';
+  if (/hands/i.test(t)) return 'Hands-on';
+  if (/tutor/i.test(t)) return 'Tutoring';
+  return t;
+}
+function parseMentorWorkbook(buf){
+  const wb = XLSX.read(buf, {type:'array'});
+  for (const sn of wb.SheetNames){
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], {header:1, raw:true, defval:''});
+    const hi = rows.findIndex(r=>r.some(c=>/type\s*of\s*session/i.test(String(c))));
+    if (hi < 0) continue;
+    const H = rows[hi].map(h=>String(h).trim().toLowerCase());
+    const col = re => H.findIndex(h=>re.test(h));
+    const c = {product:col(/product|cert/), batch:col(/batch/), type:col(/type\s*of\s*session/), date:col(/date/),
+               people:col(/participant/), mentor:col(/mentor/), hours:col(/hour/), status:col(/status/)};
+    const out = [];
+    rows.slice(hi+1).forEach((r,i)=>{
+      const txt = k => c[k] >= 0 ? String(r[c[k]] ?? '').trim() : '';
+      const type = txt('type'), product = txt('product');
+      if (!type || !product) return;                       // skips blank rows and the totals block
+      const cert = msCert(product);
+      out.push({
+        row: hi + i + 2, product, cert,
+        batch: txt('batch'), type: type.replace(/\s*-\s*/g,'-'), kind: msKind(type),
+        date: msDate(c.date >= 0 ? r[c.date] : ''),
+        people: parseFloat(txt('people')) || 0,
+        mentor: txt('mentor') || 'Unassigned',
+        hours: parseFloat(txt('hours')) || 0,
+        done: /complet|deliver|done/i.test(txt('status')),
+        statusRaw: txt('status') || 'Yet To Start',
+      });
+    });
+    return out;
+  }
+  throw new Error('No sheet with a "Type of Session" header was found.');
+}
+
+const msFmtDate = d => d ? d.toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'}) : 'Date not set';
+const msWeekday = d => d ? d.toLocaleDateString('en-US',{weekday:'short'}) : '';
+const msWeek = d => d ? Math.floor((d - PROGRAM_START)/86400000/7) + 1 : null;
+const msHrs = h => (Math.round(h*10)/10) + ' h';
+const msLabel = s => s.cert ? CERT[s.cert].name : s.product;
+const msColor = s => s.cert ? CERT[s.cert].color : 'var(--accent)';
+function msTot(list){
+  const done = list.filter(s=>s.done);
+  return {n:list.length, nd:done.length, h:list.reduce((a,s)=>a+s.hours,0), hd:done.reduce((a,s)=>a+s.hours,0),
+          reach:done.reduce((a,s)=>a+s.people,0)};
+}
+function msNext(list){
+  return list.filter(s=>!s.done && s.date && s.date >= TODAY).sort((a,b)=>a.date-b.date)[0] || null;
+}
+
+function renderMentors(){
+  const T = msTot(MS), next = msNext(MS);
+  const pS = T.n ? T.nd/T.n*100 : 0, pH = T.h ? T.hd/T.h*100 : 0;
+  $('cntM').textContent = `${T.nd}/${T.n}`;
+  const nextSame = next ? MS.filter(s=>!s.done && s.date && +s.date === +next.date) : [];
+  $('msKpis').innerHTML = `
+    <div class="card kpi"><span class="eyebrow">Sessions delivered</span><span class="v">${T.nd}<small> / ${T.n}</small></span>
+      <div class="bar" role="img" aria-label="${fmtPct(pS)} of sessions delivered"><i style="width:${pS}%"></i></div><span class="s">${fmtPct(pS)} of planned sessions</span></div>
+    <div class="card kpi"><span class="eyebrow">Hours delivered</span><span class="v">${Math.round(T.hd*10)/10}<small> / ${Math.round(T.h*10)/10} h</small></span>
+      <div class="bar" role="img" aria-label="${fmtPct(pH)} of hours delivered"><i style="width:${pH}%"></i></div><span class="s"><span class="num">${Math.round((T.h-T.hd)*10)/10}</span> hours still to deliver</span></div>
+    <div class="card kpi"><span class="eyebrow">Learner seats reached</span><span class="v">${T.reach}</span><span class="s">Participants across completed sessions</span></div>
+    <div class="card kpi"><span class="eyebrow">Next session</span><span class="v" style="font-size:22px">${next ? esc(next.date.toLocaleDateString('en-US',{month:'short',day:'numeric'})) : '—'}</span>
+      <span class="s">${next ? `${nextSame.length} session${nextSame.length>1?'s':''} · ${esc([...new Set(nextSame.map(s=>s.cert?CERT[s.cert].short:s.product))].join(', '))} · ${esc(next.kind)}` : (T.nd===T.n && T.n ? 'All sessions delivered' : 'No upcoming dated sessions')}</span></div>`;
+
+  const groups = CERTS.map(c=>({c, list:MS.filter(s=>s.cert===c.id)})).filter(g=>g.list.length);
+  const other = MS.filter(s=>!s.cert);
+  $('msCards').innerHTML = groups.map(({c,list})=>{
+    const t = msTot(list), nx = msNext(list), p = t.n ? t.nd/t.n*100 : 0;
+    const kinds = [...new Set(list.map(s=>s.kind))];
+    const mentors = [...new Set(list.map(s=>s.mentor))];
+    return `<article class="card cert" style="--cc:${c.color}">
+      <div class="cert-h"><h3>${c.name}</h3><span class="track-tag">${mentors.length} mentor${mentors.length>1?'s':''}</span></div>
+      <div class="cert-stats">
+        <div><b>${t.nd}/${t.n}</b><span>Sessions</span></div>
+        <div><b>${Math.round(t.hd*10)/10}/${Math.round(t.h*10)/10}</b><span>Hours</span></div>
+        <div><b>${t.n - t.nd}</b><span>Yet to start</span></div>
+      </div>
+      <div>
+        <div class="bar-row"><span>Delivery progress</span><b>${fmtPct(p)}</b></div>
+        <div class="bar" role="img" aria-label="${fmtPct(p)} delivered"><i style="width:${p}%"></i></div>
+      </div>
+      <div class="ms-types">${kinds.map(k=>{const l=list.filter(s=>s.kind===k);return `<div><span>${esc(k)}</span><b>${l.filter(s=>s.done).length} / ${l.length}</b></div>`;}).join('')}</div>
+      <div class="this-week">${nx ? `<span class="atype a-ilt">Next</span><span>${esc(msFmtDate(nx.date))} · ${esc(nx.type)} · ${esc(nx.batch)}</span>` : `<span class="status st-ontrack">All delivered</span>`}</div>
+    </article>`;
+  }).join('') + (other.length ? `<article class="card cert" style="--cc:var(--muted)"><div class="cert-h"><h3>Other products</h3></div>
+      <div class="note">${other.length} session${other.length>1?'s':''} with a product name the dashboard doesn't recognise: ${esc([...new Set(other.map(s=>s.product))].join(', '))}</div></article>` : '');
+
+  const mentors = [...new Set(MS.map(s=>s.mentor))].map(m=>{const l=MS.filter(s=>s.mentor===m);return {m, l, t:msTot(l)};})
+    .sort((a,b)=>b.t.h-a.t.h || a.m.localeCompare(b.m));
+  $('msMentors').innerHTML = mentors.map(({m,l,t})=>{
+    const p = t.h ? t.hd/t.h*100 : 0;
+    const certs = [...new Set(l.map(s=>s.cert).filter(Boolean))];
+    return `<div class="mentor">
+      <div class="person"><span class="av" aria-hidden="true">${esc(initials(m))}</span>
+        <div style="min-width:0"><div class="nm">${esc(m)}</div><div class="chips" style="margin-top:3px">${certs.map(id=>`<span class="chip" style="--cc:${CERT[id].color}"><span class="d"></span>${CERT[id].short}</span>`).join('')}</div></div></div>
+      <div class="bar" role="img" aria-label="${fmtPct(p)} of hours delivered"><i style="width:${p}%"></i></div>
+      <div class="figs"><b>${Math.round(t.hd*10)/10}</b> / ${Math.round(t.h*10)/10} h · <b>${t.nd}</b> / ${t.n} sessions</div>
+    </div>`;
+  }).join('');
+
+  $('msCert').innerHTML = [{id:'all',short:'All',color:'var(--accent)'}, ...CERTS.filter(c=>MS.some(s=>s.cert===c.id))].map(c=>
+    `<button type="button" data-cert="${c.id}" aria-pressed="${msUI.cert===c.id}" style="--cc:${c.color}">${c.id!=='all'?'<span class="d"></span>':''}${c.short} <span class="num" style="color:var(--muted)">${c.id==='all'?MS.length:MS.filter(s=>s.cert===c.id).length}</span></button>`).join('');
+  $('msStatus').innerHTML = [['all','All','var(--accent)'],['done','Completed','var(--s-ontrack)'],['todo','Yet To Start','var(--s-none)']].map(([k,l,col])=>
+    `<button type="button" data-st="${k}" aria-pressed="${msUI.status===k}" style="--cc:${col}">${k!=='all'?'<span class="d"></span>':''}${l} <span class="num" style="color:var(--muted)">${k==='all'?MS.length:MS.filter(s=>k==='done'?s.done:!s.done).length}</span></button>`).join('');
+  renderMentorRows();
+}
+
+function renderMentorRows(){
+  const cols = [{k:'date',l:'Date'},{k:'product',l:'Certification'},{k:'type',l:'Session'},{k:'mentor',l:'Mentor'},{k:'people',l:'Participants'},{k:'hours',l:'Hours'},{k:'status',l:'Status'}];
+  $('msHead').innerHTML = cols.map(c=>{const on = msUI.sort.key===c.k;
+    return `<th scope="col" ${on?`aria-sort="${msUI.sort.dir>0?'ascending':'descending'}"`:''}><button type="button" data-sort="${c.k}">${c.l}<span class="arr">${on?(msUI.sort.dir>0?'▲':'▼'):'↕'}</span></button></th>`;}).join('');
+  const q = msUI.q.trim().toLowerCase(), next = msNext(MS);
+  let rows = MS.filter(s=>(msUI.cert==='all'||s.cert===msUI.cert) && (msUI.status==='all'||(msUI.status==='done'?s.done:!s.done))
+    && (!q || [s.mentor,s.batch,s.type,s.product].some(v=>v.toLowerCase().includes(q))));
+  const k = msUI.sort.key, d = msUI.sort.dir;
+  const val = s => k==='date' ? (s.date ? +s.date : Infinity) : k==='product' ? msLabel(s) : k==='status' ? (s.done?1:0) : k==='type' ? s.type+s.batch : s[k];
+  rows.sort((a,b)=>{const x=val(a), y=val(b); return (x<y?-1:x>y?1:0)*d || (a.date&&b.date ? a.date-b.date : 0) || a.batch.localeCompare(b.batch);});
+  $('msRows').innerHTML = rows.length ? rows.map(s=>{
+    const past = !s.done && s.date && s.date < TODAY;
+    const isNext = next && !s.done && s.date && +s.date === +next.date;
+    return `<tr class="${isNext?'next-row':''}">
+      <td><div class="ms-date"><b>${esc(msFmtDate(s.date))}</b><span>${esc(msWeekday(s.date))}${msWeek(s.date)?` · Week ${msWeek(s.date)}`:''}${isNext?' · next up':''}</span></div></td>
+      <td><span class="chip" style="--cc:${msColor(s)}"><span class="d"></span>${esc(s.cert ? CERT[s.cert].short : s.product)}</span></td>
+      <td><div style="font-weight:600">${esc(s.type)}</div><div class="note">${esc(s.batch)}</div></td>
+      <td>${esc(s.mentor)}</td>
+      <td class="num">${s.people}</td>
+      <td class="num">${msHrs(s.hours)}</td>
+      <td><span class="status ${s.done?'st-ontrack':'st-none'}">${s.done?'Completed':'Yet To Start'}</span>${past?'<span class="tag-past">Date passed</span>':''}</td>
+    </tr>`;}).join('') : `<tr class="empty-row"><td colspan="7">No sessions match these filters.</td></tr>`;
+  const t = msTot(rows);
+  $('msCount').innerHTML = `Showing <span class="num">${rows.length}</span> of <span class="num">${MS.length}</span> sessions · <span class="num">${t.nd}</span> completed · <span class="num">${Math.round(t.hd*10)/10}</span> of <span class="num">${Math.round(t.h*10)/10}</span> h delivered`;
+  $('msSub').textContent = `${MS.length} sessions · sorted by ${cols.find(c=>c.k===k).l.toLowerCase()}`;
+}
+
+function msShowError(msg){
+  $('msLoadMsg').innerHTML = `<h3>Couldn't load ${esc(MENTOR_FILE)}</h3><p>${esc(msg)}</p>
+    <p class="note">The tab reads the workbook stored next to index.html. Serve the folder (GitHub Pages, or <span class="mono">npx serve</span>) or pick the workbook below.</p>`;
+  $('msPickWrap').hidden = false;
+}
+function msLoad(buf){
+  MS = parseMentorWorkbook(buf);
+  $('msLoad').hidden = true; $('msPickWrap').hidden = true; $('msBody').hidden = false;
+  renderMentors();
+}
+$('msPick').addEventListener('change', async e=>{
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  try { msLoad(new Uint8Array(await f.arrayBuffer())); } catch(err){ msShowError(err.message || String(err)); }
+});
+$('msCert').addEventListener('click', e=>{const b=e.target.closest('button'); if(!b) return; msUI.cert=b.dataset.cert;
+  $('msCert').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderMentorRows();});
+$('msStatus').addEventListener('click', e=>{const b=e.target.closest('button'); if(!b) return; msUI.status=b.dataset.st;
+  $('msStatus').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed', x===b)); renderMentorRows();});
+$('msQ').addEventListener('input', e=>{msUI.q=e.target.value; renderMentorRows();});
+$('msHead').addEventListener('click', e=>{const b=e.target.closest('button[data-sort]'); if(!b) return; const k=b.dataset.sort;
+  msUI.sort = msUI.sort.key===k ? {key:k, dir:-msUI.sort.dir} : {key:k, dir:(k==='people'||k==='hours'||k==='status')?-1:1}; renderMentorRows();});
+
+(async function loadMentorSessions(){
+  if (typeof XLSX === 'undefined'){ msShowError('The Excel reader (SheetJS) did not load. Check your network connection and reload.'); return; }
+  try {
+    const res = await fetch(encodeURI(MENTOR_FILE) + '?v=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error(`The server answered ${res.status} for "${MENTOR_FILE}". Make sure the file is in the same folder as index.html.`);
+    msLoad(new Uint8Array(await res.arrayBuffer()));
+  } catch(err){
+    msShowError(err instanceof TypeError ? 'The browser could not fetch the file.' : (err.message || String(err)));
+  }
+})();
 </script>
 
 </body>
