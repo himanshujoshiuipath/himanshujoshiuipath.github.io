@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>HCL Learning Excellence Tracker</title>
+<title>UiPath - HCL Enablement Program</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -261,7 +261,7 @@ tbody tr:last-child td{border-bottom:0}
     <div class="brand">
       <div class="mark" aria-hidden="true"><i style="background:var(--c-agentic)"></i><i style="background:var(--c-testcloud)"></i><i style="background:var(--c-ba)"></i><i style="background:var(--c-sa)"></i></div>
       <div style="min-width:0">
-        <h1>Learning Excellence Certification Program</h1>
+        <h1>UiPath - HCL Enablement Program</h1>
         <p>HCL Technologies · Nov 2 – Dec 26, 2026 · <span id="srcLine">Data: loading…</span></p>
       </div>
     </div>
@@ -270,6 +270,10 @@ tbody tr:last-child td{border-bottom:0}
       <button class="btn" id="exportBtn" type="button" title="Download participant progress as an Excel workbook">
         <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span class="lbl">Export Excel</span>
       </button>
+      <button class="btn" id="reportBtn" type="button" title="Download an executive summary deck (PowerPoint, UiPath template)">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4"/><path d="M8 20h8"/><path d="M8 12V9"/><path d="M12 12V7"/><path d="M16 12v-2"/></svg><span class="lbl">Export Report</span>
+      </button>
+      <input type="file" id="pptTplPick" accept=".pptx" hidden>
       <button class="btn icon" id="themeBtn" type="button" aria-label="Toggle light and dark theme">
         <svg viewBox="0 0 24 24" id="themeIco"></svg>
       </button>
@@ -848,7 +852,7 @@ function buildWorkbook(){
   const sumRows = CERTS.map(c=>{const es=ENROLL.filter(e=>e.cert===c.id);
     return [c.name,'Track '+c.track,es.length,es.filter(e=>!e.certified&&e.weeks.some(v=>v>0)).length,es.filter(e=>e.certified).length,
       +(es.reduce((a,e)=>a+overall(e),0)/(es.length||1)).toFixed(1), +(es.reduce((a,e)=>a+e.weeks[REPORT_WEEK-1],0)/(es.length||1)).toFixed(1)];});
-  sheets.push({name:'Summary', xml:sheetXml(`Learning Excellence Certification Program · exported ${fmtDate(new Date())} · Week ${CW} of 8`,
+  sheets.push({name:'Summary', xml:sheetXml(`UiPath - HCL Enablement Program · exported ${fmtDate(new Date())} · Week ${CW} of 8`,
     ['Certification','Track','Enrolled','In Progress','Certified','Avg Overall %',`Avg Week ${REPORT_WEEK} %`], sumRows,[34,10,10,12,10,14,14])});
   const titles={agentic:'UiPath Certified Professional Agentic Automation Professional',testcloud:'UiPath Certified Professional Test Cloud Architect Professional',ba:'UiPath Certified Professional Automation Business Analyst Professional',sa:'UiPath Certified Professional Automation Solution Architect Professional'};
   CERTS.forEach(c=>{
@@ -870,7 +874,7 @@ $('exportBtn').addEventListener('click', async ()=>{
   if (!LOADED){ toast('Load the participant workbook first.'); return; }
   const blob = buildWorkbook();
   const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  const filename = `HCL_Learning_Excellence_Progress_${stamp}.xlsx`;
+  const filename = `UiPath_HCL_Enablement_Program_Progress_${stamp}.xlsx`;
   if (window.claude && typeof window.claude.use === 'function'){
     const dl = await window.claude.use('downloads');
     if (!dl){ toast('Export is not available in this view.'); return; }
@@ -1117,6 +1121,292 @@ $('msHead').addEventListener('click', e=>{const b=e.target.closest('button[data-
     msShowError(err instanceof TypeError ? 'The browser could not fetch the file.' : (err.message || String(err)));
   }
 })();
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   EXPORT REPORT — a 3-slide executive PowerPoint built in the browser
+   from the live data (Participants Data.xlsx + Mentor Sessions.xlsx),
+   on the UiPath template stored next to index.html (REPORT_TEMPLATE).
+   The template's own example slides for three layouts are cloned, their
+   placeholder text is replaced, and every other template slide (plus any
+   chart, note or image only those slides used) is dropped. Masters,
+   layouts, theme and fonts stay exactly as the template defines them.
+   ═══════════════════════════════════════════════════════════════ */
+const REPORT_TEMPLATE = 'uipath-pptx-template.pptx';
+const REPORT_LAYOUTS = ['light-title-orange', 'light-four-columns-statistics', 'light-two-columns'];
+const PNS = {a:'http://schemas.openxmlformats.org/drawingml/2006/main', p:'http://schemas.openxmlformats.org/presentationml/2006/main'};
+let rptTpl = null;
+
+/* ─── What the slides say — every figure computed from the loaded data ─── */
+function rptContent(){
+  const rw = REPORT_WEEK, s = SCHEDULE[CW-1], nx = CW < 8 ? SCHEDULE[CW] : null;
+  const wkTxt = CURRENT_WEEK===0 ? 'Pre-start' : CURRENT_WEEK>8 ? 'Program complete' : `Week ${CURRENT_WEEK} of 8`;
+  const st = e => statusOf(e.weeks[rw-1], e.certified);
+  const cnt = {cert:0, ontrack:0, progress:0, behind:0, none:0};
+  ENROLL.forEach(e=>cnt[st(e)]++);
+  const avgOf = l => l.length ? l.reduce((a,e)=>a+e.weeks[rw-1],0)/l.length : 0;
+  const days = d => Math.max(0, Math.ceil((d-TODAY)/86400000));
+  const md = d => d.toLocaleDateString('en-US',{month:'short', day:'numeric'});
+  const h = v => Math.round(v*10)/10;
+  const multi = activeData.filter(p=>p.certs.length>1).length;
+  const tracks = CERTS.filter(c=>ENROLL.some(e=>e.cert===c.id));
+  const ms = Array.isArray(MS) ? MS : [];
+  const T = msTot(ms), nextS = msNext(ms);
+  const inWeek = w => ms.filter(x=>x.date && msWeek(x.date)===w);
+  const tag = x => x.cert ? CERT[x.cert].short : x.product;
+
+  const stats = [
+    {v:String(activeData.length), label:'Learners enrolled',
+     d:`${ENROLL.length} certification enrollments across ${tracks.length} tracks · ${multi} in 2+ tracks`},
+    {v:fmtPct(avgOf(ENROLL)), label:`Avg Week ${rw} progress`,
+     d:`${cnt.ontrack} on track · ${cnt.progress} in progress · ${cnt.behind} behind · ${cnt.none} not started`},
+    {v:`${cnt.cert}/${ENROLL.length}`, label:'Certifications earned',
+     d: cnt.cert ? `${fmtPct(cnt.cert/ENROLL.length*100)} of enrollments · exam deadline Dec 26`
+        : TODAY < EXAM_OPENS ? `Exam window opens Dec 21 · ${days(EXAM_OPENS)} days to go` : 'Exam window open until Dec 26'},
+    ms.length
+      ? {v:`${T.nd}/${T.n}`, label:'Mentor sessions delivered',
+         d:`${h(T.hd)} of ${h(T.h)} hours delivered${nextS ? ` · next ${md(nextS.date)} (${tag(nextS)})` : ''}`}
+      : {v:'—', label:'Mentor sessions', d:'Mentor Sessions workbook not loaded'},
+  ];
+
+  // This week: one line per track with this week's activity and its progress.
+  const nowB = tracks.map(c=>{
+    const es = ENROLL.filter(e=>e.cert===c.id);
+    return [{t:c.short+': ', b:true}, {t:`${s.a[c.id].d} · ${es.length} enrolled · Wk ${rw} avg ${fmtPct(avgOf(es))}`}];
+  });
+  const wkMs = inWeek(CW);
+  if (ms.length) nowB.push([{t:'Mentor sessions: ', b:true}, {t: wkMs.length
+      ? `${wkMs.filter(x=>x.done).length} of ${wkMs.length} delivered this week (${h(wkMs.reduce((a,x)=>a+x.hours,0))} h)`
+      : 'none scheduled this week'}]);
+  nowB.push([{t:'Needs attention: ', b:true}, {t:`${cnt.behind + cnt.none} enrollments behind or not started`}]);
+
+  // What's next: next week's plan (tracks with the same activity grouped), mentor sessions, dates, action.
+  const nextB = [];
+  if (nx){
+    const g = new Map();
+    tracks.forEach(c=>{const k = nx.a[c.id].d; if (!g.has(k)) g.set(k, []); g.get(k).push(c.short);});
+    g.forEach((who,k)=>nextB.push([{t:who.join(', ')+': ', b:true}, {t:k}]));
+    const nm = inWeek(nx.w).filter(x=>!x.done);
+    if (ms.length) nextB.push([{t:'Mentor sessions: ', b:true}, {t: nm.length
+        ? `${nm.length} planned (${h(nm.reduce((a,x)=>a+x.hours,0))} h)${nextS ? ` · next on ${md(nextS.date)}` : ''}` : 'none scheduled'}]);
+  } else if (ms.length && T.n > T.nd){
+    nextB.push([{t:'Mentor sessions: ', b:true}, {t:`${T.n - T.nd} still to deliver`}]);
+  }
+  if (TODAY <= MOCK_DEADLINE) nextB.push([{t:'Mock test: ', b:true}, {t:`score ≥ 85% by Dec 18 (${days(MOCK_DEADLINE)} days)`}]);
+  if (TODAY <= EXAM_DEADLINE) nextB.push([{t:'Exam window: ', b:true}, {t: TODAY < EXAM_OPENS ? `Dec 21 – 26 (opens in ${days(EXAM_OPENS)} days)` : `closes Dec 26 (${days(EXAM_DEADLINE)} days)`}]);
+  if (cnt.none + cnt.behind) nextB.push([{t:'Action: ', b:true}, {t:`follow up with ${cnt.none} not started and ${cnt.behind} behind`}]);
+
+  return {
+    title:'UiPath - HCL Enablement Program',
+    sub:[`Executive status report · ${wkTxt}`, `${fmtDate(TODAY)} · ${tracks.map(c=>c.short).join(", ")} tracks`],
+    statsTitle:`Executive summary · ${wkTxt}`, stats,
+    colsTitle:'Where we are and what’s next',
+    nowH:`Now · Week ${CW} · ${s.range}`, nowLead:s.theme, nowB,
+    nextH: nx ? `Next · Week ${nx.w} · ${nx.range}` : 'Next · Program close-out',
+    nextLead: nx ? nx.theme : 'Certification exam window closes Dec 26', nextB,
+  };
+}
+
+/* ─── Slide XML editing (placeholders keep the template's styling) ─── */
+const rptParse = x => new DOMParser().parseFromString(x, 'application/xml');
+const rptSer = d => { const s = new XMLSerializer().serializeToString(d); return s.startsWith('<?xml') ? s : '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + s; };
+const rptKids = (el, ns, name) => Array.from(el.childNodes).filter(n=>n.nodeType===1 && n.namespaceURI===ns && n.localName===name);
+function rptPh(doc, sel){
+  return Array.from(doc.getElementsByTagNameNS(PNS.p,'sp')).find(sp=>{
+    const ph = sp.getElementsByTagNameNS(PNS.p,'ph')[0];
+    if (!ph) return false;
+    return sel.idx !== undefined ? ph.getAttribute('idx') === String(sel.idx) : ph.getAttribute('type') === sel.type;
+  });
+}
+/* paras: [{runs:[{t,b}], tpl:'lead'|'item', sz}] — paragraph and run formatting are cloned from the
+   template's first (lead) and second (item) paragraphs in that placeholder. */
+function rptFill(doc, sel, paras, box){
+  const sp = rptPh(doc, sel); if (!sp) return;
+  const tx = sp.getElementsByTagNameNS(PNS.p,'txBody')[0];
+  const old = rptKids(tx, PNS.a, 'p');
+  const tpl = {lead: old[0], item: old[1] || old[0]};
+  old.forEach(p=>tx.removeChild(p));
+  paras.forEach(spec=>{
+    const src = tpl[spec.tpl || 'lead'];
+    const p = doc.createElementNS(PNS.a, 'a:p');
+    const pPr = src && rptKids(src, PNS.a, 'pPr')[0];
+    if (pPr) p.appendChild(pPr.cloneNode(true));
+    const r0 = src && rptKids(src, PNS.a, 'r')[0];
+    const rPr0 = r0 && rptKids(r0, PNS.a, 'rPr')[0];
+    spec.runs.forEach(run=>{
+      const r = doc.createElementNS(PNS.a, 'a:r');
+      const rPr = rPr0 ? rPr0.cloneNode(true) : doc.createElementNS(PNS.a, 'a:rPr');
+      rPr.setAttribute('lang', 'en-US'); rPr.removeAttribute('dirty');
+      if (spec.sz) rPr.setAttribute('sz', String(spec.sz));
+      if (run.b !== undefined) rPr.setAttribute('b', run.b ? '1' : '0');
+      const t = doc.createElementNS(PNS.a, 'a:t'); t.textContent = run.t;
+      r.appendChild(rPr); r.appendChild(t); p.appendChild(r);
+    });
+    tx.appendChild(p);
+  });
+  if (box){ // taller text box than the layout's default, so the live content fits
+    const spPr = sp.getElementsByTagNameNS(PNS.p,'spPr')[0];
+    while (spPr.firstChild) spPr.removeChild(spPr.firstChild);
+    const xf = doc.createElementNS(PNS.a,'a:xfrm'), off = doc.createElementNS(PNS.a,'a:off'), ext = doc.createElementNS(PNS.a,'a:ext');
+    off.setAttribute('x', box[0]); off.setAttribute('y', box[1]); ext.setAttribute('cx', box[2]); ext.setAttribute('cy', box[3]);
+    xf.appendChild(off); xf.appendChild(ext); spPr.appendChild(xf);
+    const bp = tx.getElementsByTagNameNS(PNS.a,'bodyPr')[0];
+    if (bp && !bp.getElementsByTagNameNS(PNS.a,'normAutofit').length) bp.appendChild(doc.createElementNS(PNS.a,'a:normAutofit'));
+  }
+}
+function rptSlideNo(doc, n){
+  const sp = rptPh(doc, {type:'sldNum'}); if (!sp) return;
+  const t = sp.getElementsByTagNameNS(PNS.a,'t')[0]; if (t) t.textContent = String(n);
+}
+const txt1 = (t, o={}) => ({runs:[{t, b:o.b}], tpl:o.tpl, sz:o.sz});
+
+function rptSlideTitle(xml, C){
+  const d = rptParse(xml);
+  rptFill(d, {type:'ctrTitle'}, [txt1(C.title, {sz:4000})]);
+  rptFill(d, {idx:1}, C.sub.map(t=>txt1(t)));
+  rptSlideNo(d, 1);
+  return rptSer(d);
+}
+function rptSlideStats(xml, C){
+  const d = rptParse(xml);
+  rptFill(d, {type:'title'}, [txt1(C.statsTitle)]);
+  [33,34,35,36].forEach((idx,i)=>rptFill(d, {idx}, [txt1(C.stats[i].v)]));
+  [19,30,31,32].forEach((idx,i)=>rptFill(d, {idx}, [txt1(C.stats[i].label, {b:true, sz:1800}), txt1(C.stats[i].d, {b:false, sz:1400})]));
+  rptSlideNo(d, 2);
+  return rptSer(d);
+}
+function rptSlideCols(xml, C){
+  const d = rptParse(xml);
+  rptFill(d, {type:'title'}, [txt1(C.colsTitle)]);
+  rptFill(d, {idx:18}, [txt1(C.nowH)]);
+  rptFill(d, {idx:19}, [txt1(C.nextH)]);
+  const body = (lead, items) => [txt1(lead, {b:true, sz:1300}), ...items.map(runs=>({runs, tpl:'item', sz:1200}))];
+  rptFill(d, {idx:14}, body(C.nowLead, C.nowB), [1833563, 2524319, 3692525, 3600000]);
+  rptFill(d, {idx:15}, body(C.nextLead, C.nextB), [6550606, 2524319, 3692525, 3600000]);
+  rptSlideNo(d, 3);
+  return rptSer(d);
+}
+
+/* ─── Package surgery: keep masters / layouts / theme, replace the slides ─── */
+async function rptBuild(buf){
+  const zip = await JSZip.loadAsync(buf);
+  const rd = p => { const f = zip.file(p); if (!f) throw new Error(`The template is missing ${p}`); return f.async('string'); };
+  const num = p => +((p.match(/(\d+)\.xml/) || [0,0])[1]);
+  const layouts = {};
+  for (const p of Object.keys(zip.files).filter(p=>/^ppt\/slideLayouts\/slideLayout\d+\.xml$/.test(p))){
+    const m = (await rd(p)).match(/<p:cSld\b[^>]*\bname="([^"]*)"/); if (m) layouts[m[1]] = p.split('/').pop();
+  }
+  const slideRels = Object.keys(zip.files).filter(p=>/^ppt\/slides\/_rels\/slide\d+\.xml\.rels$/.test(p)).sort((a,b)=>num(a)-num(b));
+  const samples = [];
+  for (const name of REPORT_LAYOUTS){
+    const lf = layouts[name];
+    if (!lf) throw new Error(`The template has no "${name}" layout`);
+    let found = null;
+    for (const rp of slideRels){ const rels = await rd(rp); if (rels.includes(`slideLayouts/${lf}"`)){ found = {xml: await rd(rp.replace('_rels/','').replace(/\.rels$/,'')), rels}; break; } }
+    if (!found) throw new Error(`The template has no example slide on the "${name}" layout`);
+    samples.push(found);
+  }
+  const C = rptContent();
+  const slides = [rptSlideTitle(samples[0].xml, C), rptSlideStats(samples[1].xml, C), rptSlideCols(samples[2].xml, C)];
+
+  Object.keys(zip.files).filter(p=>/^ppt\/(slides|notesSlides|changesInfos)\//.test(p)).forEach(p=>zip.remove(p));
+  slides.forEach((x,i)=>{
+    zip.file(`ppt/slides/slide${i+1}.xml`, x);
+    zip.file(`ppt/slides/_rels/slide${i+1}.xml.rels`, samples[i].rels.replace(/<Relationship\b[^>]*\/notesSlide"[^>]*\/>/g, ''));
+  });
+
+  const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide';
+  let prels = await rd('ppt/_rels/presentation.xml.rels');
+  prels = prels.replace(/<Relationship\b[^>]*\/relationships\/slide"[^>]*\/>/g, '').replace(/<Relationship\b[^>]*changesInfo"[^>]*\/>/g, '')
+    .replace('</Relationships>', slides.map((_,i)=>`<Relationship Id="rIdRpt${i+1}" Type="${REL}" Target="slides/slide${i+1}.xml"/>`).join('') + '</Relationships>');
+  zip.file('ppt/_rels/presentation.xml.rels', prels);
+
+  let pres = await rd('ppt/presentation.xml');
+  pres = pres.replace(/<p:sldIdLst>[\s\S]*?<\/p:sldIdLst>/, '<p:sldIdLst>' + slides.map((_,i)=>`<p:sldId id="${256+i}" r:id="rIdRpt${i+1}"/>`).join('') + '</p:sldIdLst>')
+    .replace(/<p:ext uri="\{521415D9-36F7-43E2-AB2F-B90AF26B5E84\}">[\s\S]*?<\/p:ext>/, ''); // section list named the old slides
+  zip.file('ppt/presentation.xml', pres);
+
+  let ct = await rd('[Content_Types].xml');
+  ct = ct.replace(/<Override\b[^>]*PartName="\/ppt\/slides\/[^"]*"[^>]*\/>/g, '')
+    .replace('</Types>', slides.map((_,i)=>`<Override PartName="/ppt/slides/slide${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('') + '</Types>');
+  zip.file('[Content_Types].xml', ct);
+
+  zip.file('_rels/.rels', (await rd('_rels/.rels')).replace(/<Relationship\b[^>]*\/thumbnail"[^>]*\/>/g, ''));
+  zip.file('docProps/app.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Microsoft Office PowerPoint</Application><PresentationFormat>Widescreen</PresentationFormat><Slides>${slides.length}</Slides><Notes>0</Notes><HiddenSlides>0</HiddenSlides></Properties>`);
+  if (zip.file('docProps/core.xml')){
+    const title = `${C.title} · ${C.statsTitle.replace('Executive summary · ','')}`.replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+    zip.file('docProps/core.xml', (await rd('docProps/core.xml')).replace(/<dc:title\s*\/>|<dc:title>[^<]*<\/dc:title>/, `<dc:title>${title}</dc:title>`));
+  }
+  await rptPrune(zip);
+  return zip.generateAsync({type:'uint8array', compression:'DEFLATE', compressionOptions:{level:6}});
+}
+/* Drop every part no longer reachable from the package root (old charts, notes, images). */
+async function rptPrune(zip){
+  const relsOf = part => { const i = part.lastIndexOf('/'); return part ? `${part.slice(0,i+1)}_rels/${part.slice(i+1)}.rels` : '_rels/.rels'; };
+  const resolve = (base, t) => {
+    if (t.startsWith('/')) return t.slice(1);
+    const out = [];
+    (base.slice(0, base.lastIndexOf('/')+1) + t).split('/').forEach(s=>{ if (s==='..') out.pop(); else if (s && s!=='.') out.push(s); });
+    return out.join('/');
+  };
+  const keep = new Set(['[Content_Types].xml']), queue = [''];
+  while (queue.length){
+    const part = queue.shift(), rp = relsOf(part), f = zip.file(rp);
+    if (!f) continue;
+    keep.add(rp);
+    for (const m of (await f.async('string')).matchAll(/<Relationship\b[^>]*>/g)){
+      if (/TargetMode="External"/.test(m[0])) continue;
+      const t = (m[0].match(/Target="([^"]*)"/) || [])[1]; if (!t) continue;
+      let target; try { target = resolve(part, decodeURI(t)); } catch(e){ target = resolve(part, t); }
+      if (!keep.has(target) && zip.file(target)){ keep.add(target); queue.push(target); }
+    }
+  }
+  Object.keys(zip.files).forEach(p=>{ if (!zip.files[p].dir && !keep.has(p)) zip.remove(p); });
+  const ct = await zip.file('[Content_Types].xml').async('string');
+  zip.file('[Content_Types].xml', ct.replace(/<Override\b[^>]*PartName="\/([^"]*)"[^>]*\/>/g, (m,p)=>zip.file(p) ? m : ''));
+}
+
+/* ─── Button ─── */
+async function rptExport(){
+  const b = $('reportBtn'), l = b.querySelector('.lbl'), label = l.textContent;
+  b.disabled = true; l.textContent = 'Building…';
+  try {
+    const bytes = await rptBuild(rptTpl);
+    const blob = new Blob([bytes], {type:'application/vnd.openxmlformats-officedocument.presentationml.presentation'});
+    const d = new Date(), stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const filename = `UiPath_HCL_Enablement_Program_Report_Week${CW}_${stamp}.pptx`;
+    if (window.claude && typeof window.claude.use === 'function'){
+      const dl = await window.claude.use('downloads');
+      if (!dl){ toast('Export is not available in this view.'); return; }
+      try { await dl.save({filename, data:blob}); toast('Report saved'); }
+      catch(err){ if (err && err.code==='declined') return; toast(err && err.code==='rate_limited' ? 'A save prompt is already open.' : 'Export failed. Try again.'); }
+      return;
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000); toast('Report downloaded');
+  } catch(err){
+    console.error(err); toast('Report export failed: ' + (err.message || err));
+  } finally { b.disabled = false; l.textContent = label; }
+}
+$('reportBtn').addEventListener('click', async ()=>{
+  if (!LOADED){ toast('Load the participant workbook first.'); return; }
+  if (typeof JSZip === 'undefined'){ toast('The PowerPoint builder did not load. Check your network connection and reload.'); return; }
+  if (!rptTpl){
+    try {
+      const res = await fetch(encodeURI(REPORT_TEMPLATE) + '?v=' + Date.now(), {cache:'no-store'});
+      if (!res.ok) throw new Error(res.status);
+      rptTpl = await res.arrayBuffer();
+    } catch(e){ toast(`Choose ${REPORT_TEMPLATE} to build the report.`); $('pptTplPick').click(); return; }
+  }
+  rptExport();
+});
+$('pptTplPick').addEventListener('change', async e=>{
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  rptTpl = await f.arrayBuffer(); e.target.value = '';
+  rptExport();
+});
 </script>
 
 </body>
